@@ -6,6 +6,18 @@ import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
+
+// Load environment variables FIRST
+dotenv.config();
+
+// Debug: Check if environment variables are loaded
+console.log('🔧 Environment Check:');
+console.log('- JWT_SECRET:', process.env.JWT_SECRET ? '✅ Loaded' : '❌ Missing');
+console.log('- MONGODB_URI:', process.env.MONGODB_URI ? '✅ Loaded' : '❌ Missing');
+console.log('- PORT:', process.env.PORT || '5000 (default)');
+console.log('');
+
+// Now import modules that depend on environment variables
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import recipeRoutes from './routes/recipes.js';
@@ -13,11 +25,8 @@ import friendRoutes from './routes/friends.js';
 import chatRoutes from './routes/chat.js';
 import { authenticateToken } from './middleware/auth.js';
 
-// Load environment variables
-dotenv.config();
-
 // Validate required environment variables
-const requiredEnvVars = ['MONGODB_URI'];
+const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET'];
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 
 if (missingEnvVars.length > 0) {

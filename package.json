@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "audit-fix": "npm audit fix",
-    "start": "node server/index.js"
+    "start": "node server/index.js",
+    "test-server": "node test-server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

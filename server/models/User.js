@@ -69,7 +69,8 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-userSchema.index({ username: 1 });
-userSchema.index({ email: 1 });
+// Remove duplicate indexes - unique: true already creates indexes
+// userSchema.index({ username: 1 });
+// userSchema.index({ email: 1 });
 
 export default mongoose.model('User', userSchema);
