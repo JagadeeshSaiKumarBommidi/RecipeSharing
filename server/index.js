@@ -142,7 +142,7 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-const HOST = process.env.HOST || 'localhost'; // Allow override for network access
+const HOST = process.env.HOST || '0.0.0.0'; // Allow override for network access
 
 server.listen(PORT, HOST, () => {
   console.log(`🚀 Server running on ${HOST}:${PORT}`);
