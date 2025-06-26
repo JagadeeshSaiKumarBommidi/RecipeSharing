@@ -12,7 +12,10 @@
     "preview": "vite preview",
     "audit-fix": "npm audit fix",
     "start": "node server/index.js",
-    "test-server": "node test-server.js"
+    "test-server": "node test-server.js",
+    "build:frontend": "vite build",
+    "start:backend": "node server/index.js",
+    "deploy:prepare": "npm run build:frontend"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

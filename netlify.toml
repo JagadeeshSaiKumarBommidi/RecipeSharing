@@ -1,0 +1,30 @@
+# Netlify Build Configuration
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Redirect all routes to index.html for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# API proxy for development (won't work in production)
+[[redirects]]
+  from = "/api/*"
+  to = "http://localhost:5000/api/:splat"
+  status = 200
+  force = false
+  conditions = {Role = ["admin"], Country = ["US"]}
+
+# Environment variables for production
+[context.production.environment]
+  REACT_APP_API_URL = "https://your-backend-url.herokuapp.com"
+  REACT_APP_SOCKET_URL = "https://your-backend-url.herokuapp.com"
+
+[context.deploy-preview.environment]
+  REACT_APP_API_URL = "https://your-backend-url.herokuapp.com"
+  REACT_APP_SOCKET_URL = "https://your-backend-url.herokuapp.com"
