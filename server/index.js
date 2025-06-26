@@ -142,10 +142,21 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+const HOST = process.env.HOST || 'localhost'; // Allow override for network access
+
+server.listen(PORT, HOST, () => {
+  console.log(`🚀 Server running on ${HOST}:${PORT}`);
   console.log(`📱 Client URL: ${process.env.CLIENT_URL || "http://localhost:5173"}`);
   console.log(`🗄️  Database: ${MONGODB_URI.includes('localhost') ? 'Local MongoDB' : 'MongoDB Atlas'}`);
+  
+  // Show network accessibility info
+  if (HOST === '0.0.0.0') {
+    console.log('🌐 Server accessible from network');
+    console.log('💡 Other systems can access via your IP address');
+  } else {
+    console.log('🔒 Server only accessible from localhost');
+    console.log('💡 Set HOST=0.0.0.0 for network access');
+  }
 });
 
 // Graceful shutdown

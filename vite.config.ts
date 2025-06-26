@@ -7,4 +7,13 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  server: {
+    host: true, // Allow external connections
+    port: 5173,
+    cors: true,
+  },
+  preview: {
+    host: true, // Allow external connections in preview mode
+    port: 4173,
+  },
 });
