@@ -20,14 +20,14 @@ export const StoryRing: React.FC<StoryRingProps> = ({
   onClick 
 }) => {
   return (
-    <div className="flex flex-col items-center space-y-2 cursor-pointer" onClick={onClick}>
-      <div className={`relative w-16 h-16 rounded-full p-1 ${
+    <div className="flex flex-col items-center space-y-3 cursor-pointer group" onClick={onClick}>
+      <div className={`relative w-20 h-20 rounded-full p-1 transition-all duration-300 ${
         hasUnviewed 
-          ? 'bg-gradient-to-tr from-purple-600 via-pink-600 to-orange-600' 
-          : 'bg-gray-300'
-      }`}>
-        <div className="w-full h-full rounded-full overflow-hidden bg-white p-0.5">
-          <div className="w-full h-full rounded-full overflow-hidden bg-gray-200 relative">
+          ? 'bg-gradient-to-tr from-blue-600 via-blue-400 to-blue-200 shadow-lg shadow-blue-400/25' 
+          : 'bg-gradient-to-tr from-slate-600 to-slate-500'
+      } ${isOwn ? 'ring-2 ring-blue-400/50 ring-offset-2 ring-offset-slate-900' : ''} group-hover:scale-105`}>
+        <div className="w-full h-full rounded-full overflow-hidden bg-slate-900 p-0.5">
+          <div className="w-full h-full rounded-full overflow-hidden bg-slate-800 relative border border-slate-700">
             {author.profilePicture ? (
               <img
                 src={author.profilePicture}
@@ -35,19 +35,19 @@ export const StoryRing: React.FC<StoryRingProps> = ({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-300">
-                <User className="w-6 h-6 text-gray-600" />
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800">
+                <User className="w-7 h-7 text-blue-300" />
               </div>
             )}
             {isOwn && (
-              <div className="absolute bottom-0 right-0 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center border-2 border-white">
-                <Plus className="w-3 h-3 text-white" />
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-r from-blue-600 to-blue-500 rounded-full flex items-center justify-center border-2 border-slate-900 shadow-lg">
+                <Plus className="w-3.5 h-3.5 text-white" />
               </div>
             )}
           </div>
         </div>
       </div>
-      <span className="text-xs text-gray-700 text-center max-w-16 truncate">
+      <span className="text-xs text-blue-200 text-center max-w-20 truncate font-medium">
         {isOwn ? 'Your Story' : author.fullName.split(' ')[0]}
       </span>
     </div>

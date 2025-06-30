@@ -50,26 +50,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl premium-float"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl premium-float" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-3xl premium-float" style={{animationDelay: '4s'}}></div>
+      </div>
+      
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-600/10 to-red-600/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="text-center">
             <div className="flex justify-center mb-8">
-              <div className="p-4 bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl shadow-2xl">
+              <div className="p-4 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-3xl shadow-2xl premium-shadow-lg">
                 <ChefHat className="w-16 h-16 text-white" />
               </div>
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6">
-              Recipe<span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600">Share</span>
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
+              Recipe<span className="premium-text-gradient">Share</span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-blue-200 mb-8 max-w-3xl mx-auto leading-relaxed">
               Join the ultimate culinary community where food lovers share recipes, connect with friends, and discover new flavors together
             </p>
             <button
               onClick={onGetStarted}
-              className="inline-flex items-center px-12 py-4 text-lg font-semibold text-white bg-gradient-to-r from-orange-600 to-red-600 rounded-full hover:from-orange-700 hover:to-red-700 transform hover:scale-105 transition-all duration-200 shadow-2xl hover:shadow-3xl"
+              className="inline-flex items-center px-12 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-full hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 premium-shadow-lg hover:shadow-2xl premium-hover"
             >
               Get Started
               <Sparkles className="ml-3 w-5 h-5" />
@@ -79,12 +86,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </div>
 
       {/* Features Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-4xl font-bold text-white mb-4">
             Everything You Need for Culinary Success
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-blue-200 max-w-2xl mx-auto">
             From recipe sharing to community building, we've got all the tools to make your cooking journey amazing
           </p>
         </div>
@@ -93,15 +100,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100"
+              className="group premium-bg-card rounded-2xl p-8 premium-shadow hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 premium-hover"
             >
-              <div className="text-orange-600 mb-6 group-hover:scale-110 transition-transform duration-200">
+              <div className="text-blue-400 mb-6 group-hover:scale-110 transition-transform duration-200 group-hover:text-blue-300">
                 {feature.icon}
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              <h3 className="text-xl font-semibold text-white mb-4 group-hover:text-blue-200 transition-colors">
                 {feature.title}
               </h3>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-blue-300/80 leading-relaxed group-hover:text-blue-200 transition-colors">
                 {feature.description}
               </p>
             </div>
@@ -110,17 +117,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-gradient-to-r from-orange-600 to-red-600 py-20">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 py-20 relative">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8 relative z-10">
           <h2 className="text-4xl font-bold text-white mb-6">
             Ready to Start Your Culinary Journey?
           </h2>
-          <p className="text-xl text-orange-100 mb-8 leading-relaxed">
+          <p className="text-xl text-blue-100 mb-8 leading-relaxed">
             Join thousands of food lovers who are already sharing, learning, and connecting through RecipeShare
           </p>
           <button
             onClick={onGetStarted}
-            className="inline-flex items-center px-12 py-4 text-lg font-semibold text-orange-600 bg-white rounded-full hover:bg-gray-50 transform hover:scale-105 transition-all duration-200 shadow-2xl"
+            className="inline-flex items-center px-12 py-4 text-lg font-semibold text-slate-900 bg-white rounded-full hover:bg-blue-50 transform hover:scale-105 transition-all duration-300 premium-shadow-lg premium-hover"
           >
             Join the Community
             <Users className="ml-3 w-5 h-5" />
@@ -129,12 +137,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </div>
 
       {/* Footer */}
-      <div className="bg-gray-900 text-white py-12">
+      <div className="bg-slate-900 text-white py-12 border-t border-blue-800/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex justify-center mb-6">
-            <ChefHat className="w-8 h-8 text-orange-500" />
+            <ChefHat className="w-8 h-8 text-blue-400" />
           </div>
-          <p className="text-gray-400">
+          <p className="text-blue-300/70">
             © 2025 RecipeShare. Bringing food lovers together, one recipe at a time.
           </p>
         </div>

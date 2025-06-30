@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Eye } from 'lucide-react';
+import { X, Eye } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface Story {
@@ -57,8 +57,8 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
   const { user } = useAuth();
 
   const backgroundColors = [
-    '#000000', '#1a1a1a', '#4a148c', '#1565c0', '#0d47a1',
-    '#00695c', '#2e7d32', '#f57c00', '#d84315', '#c62828'
+    '#000000', '#0f172a', '#1e293b', '#334155', '#0c1844', 
+    '#1e3a8a', '#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa'
   ];
 
   const fonts = ['Arial', 'Georgia', 'Times New Roman', 'Courier New', 'Verdana'];
@@ -157,31 +157,31 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-        <div className="text-white">Loading stories...</div>
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-black flex items-center justify-center z-50">
+        <div className="text-blue-100 text-lg font-medium">Loading stories...</div>
       </div>
     );
   }
 
   if (showCreateStory) {
     return (
-      <div className="fixed inset-0 bg-black z-50 flex flex-col">
-        <div className="flex justify-between items-center p-4 text-white">
-          <button onClick={() => setShowCreateStory(false)} className="p-2">
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-black z-50 flex flex-col">
+        <div className="flex justify-between items-center p-6 text-blue-100 border-b border-blue-800/30">
+          <button onClick={() => setShowCreateStory(false)} className="p-2 hover:bg-blue-800/30 rounded-full transition-colors">
             <X className="w-6 h-6" />
           </button>
-          <h2 className="text-lg font-semibold">Create Story</h2>
+          <h2 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-blue-200 bg-clip-text text-transparent">Create Story</h2>
           <button 
             onClick={createStory}
-            className="bg-blue-600 px-4 py-2 rounded-lg font-semibold"
+            className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 px-6 py-2 rounded-xl font-semibold text-white shadow-lg transition-all"
           >
             Share
           </button>
         </div>
         
-        <div className="flex-1 flex items-center justify-center p-4">
+        <div className="flex-1 flex items-center justify-center p-6">
           <div 
-            className="w-80 h-96 rounded-2xl flex items-center justify-center p-6 relative"
+            className="w-80 h-96 rounded-3xl flex items-center justify-center p-8 relative shadow-2xl border border-blue-400/20"
             style={{ 
               backgroundColor: newStory.backgroundColor,
               color: newStory.textColor,
@@ -192,23 +192,23 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
               value={newStory.content}
               onChange={(e) => setNewStory(prev => ({ ...prev, content: e.target.value }))}
               placeholder="Share what's on your mind..."
-              className="w-full h-full bg-transparent text-center text-xl resize-none outline-none placeholder-gray-300"
+              className="w-full h-full bg-transparent text-center text-xl resize-none outline-none placeholder-blue-300/60"
               style={{ color: newStory.textColor, fontFamily: newStory.font }}
             />
           </div>
         </div>
 
-        <div className="p-4 bg-gray-900">
+        <div className="p-6 bg-gradient-to-t from-black to-slate-900 border-t border-blue-800/30">
           {/* Background Colors */}
-          <div className="mb-4">
-            <p className="text-white text-sm mb-2">Background Color</p>
-            <div className="flex space-x-2 overflow-x-auto">
+          <div className="mb-6">
+            <p className="text-blue-100 text-sm mb-3 font-medium">Background Color</p>
+            <div className="flex space-x-3 overflow-x-auto pb-2">
               {backgroundColors.map(color => (
                 <button
                   key={color}
                   onClick={() => setNewStory(prev => ({ ...prev, backgroundColor: color }))}
-                  className={`w-10 h-10 rounded-full border-2 ${
-                    newStory.backgroundColor === color ? 'border-white' : 'border-transparent'
+                  className={`w-12 h-12 rounded-full border-3 shadow-lg transition-all ${
+                    newStory.backgroundColor === color ? 'border-blue-400 scale-110' : 'border-blue-600/30 hover:border-blue-500/50'
                   }`}
                   style={{ backgroundColor: color }}
                 />
@@ -217,19 +217,25 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
           </div>
 
           {/* Text Color */}
-          <div className="mb-4">
-            <p className="text-white text-sm mb-2">Text Color</p>
-            <div className="flex space-x-2">
+          <div className="mb-6">
+            <p className="text-blue-100 text-sm mb-3 font-medium">Text Color</p>
+            <div className="flex space-x-3">
               <button
                 onClick={() => setNewStory(prev => ({ ...prev, textColor: '#ffffff' }))}
-                className={`w-8 h-8 rounded-full bg-white border-2 ${
-                  newStory.textColor === '#ffffff' ? 'border-blue-500' : 'border-gray-300'
+                className={`w-10 h-10 rounded-full bg-white border-3 shadow-lg transition-all ${
+                  newStory.textColor === '#ffffff' ? 'border-blue-400 scale-110' : 'border-blue-600/30 hover:border-blue-500/50'
+                }`}
+              />
+              <button
+                onClick={() => setNewStory(prev => ({ ...prev, textColor: '#60a5fa' }))}
+                className={`w-10 h-10 rounded-full bg-blue-400 border-3 shadow-lg transition-all ${
+                  newStory.textColor === '#60a5fa' ? 'border-blue-400 scale-110' : 'border-blue-600/30 hover:border-blue-500/50'
                 }`}
               />
               <button
                 onClick={() => setNewStory(prev => ({ ...prev, textColor: '#000000' }))}
-                className={`w-8 h-8 rounded-full bg-black border-2 ${
-                  newStory.textColor === '#000000' ? 'border-blue-500' : 'border-gray-300'
+                className={`w-10 h-10 rounded-full bg-black border-3 shadow-lg transition-all ${
+                  newStory.textColor === '#000000' ? 'border-blue-400 scale-110' : 'border-blue-600/30 hover:border-blue-500/50'
                 }`}
               />
             </div>
@@ -237,14 +243,14 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
 
           {/* Font */}
           <div>
-            <p className="text-white text-sm mb-2">Font</p>
+            <p className="text-blue-100 text-sm mb-3 font-medium">Font Style</p>
             <select
               value={newStory.font}
               onChange={(e) => setNewStory(prev => ({ ...prev, font: e.target.value }))}
-              className="bg-gray-800 text-white px-3 py-2 rounded-lg"
+              className="bg-slate-800 text-blue-100 px-4 py-3 rounded-xl border border-blue-600/30 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
             >
               {fonts.map(font => (
-                <option key={font} value={font}>{font}</option>
+                <option key={font} value={font} className="bg-slate-800">{font}</option>
               ))}
             </select>
           </div>
@@ -255,12 +261,12 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
 
   if (storyGroups.length === 0) {
     return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-        <div className="text-center text-white">
-          <p className="text-xl mb-4">No stories yet</p>
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-black flex items-center justify-center z-50">
+        <div className="text-center">
+          <p className="text-2xl mb-6 bg-gradient-to-r from-blue-400 to-blue-200 bg-clip-text text-transparent font-bold">No stories yet</p>
           <button
             onClick={() => setShowCreateStory(true)}
-            className="bg-blue-600 px-6 py-3 rounded-lg font-semibold"
+            className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 px-8 py-4 rounded-xl font-bold text-white shadow-xl transition-all transform hover:scale-105"
           >
             Create Your First Story
           </button>
@@ -278,41 +284,43 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-black z-50 flex flex-col">
       {/* Header */}
-      <div className="flex justify-between items-center p-4 text-white relative z-10">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-600">
-            {currentGroup.author.profilePicture ? (
-              <img
-                src={currentGroup.author.profilePicture}
-                alt={currentGroup.author.fullName}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white">
-                {currentGroup.author.fullName.charAt(0)}
-              </div>
-            )}
+      <div className="flex justify-between items-center p-6 text-blue-100 relative z-10 bg-black/20 backdrop-blur-sm">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-600 to-blue-400 p-0.5">
+            <div className="w-full h-full rounded-full overflow-hidden bg-slate-800">
+              {currentGroup.author.profilePicture ? (
+                <img
+                  src={currentGroup.author.profilePicture}
+                  alt={currentGroup.author.fullName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-blue-200 font-bold">
+                  {currentGroup.author.fullName.charAt(0)}
+                </div>
+              )}
+            </div>
           </div>
           <div>
-            <p className="font-semibold">{currentGroup.author.fullName}</p>
-            <p className="text-sm text-gray-300">
+            <p className="font-bold text-blue-100">{currentGroup.author.fullName}</p>
+            <p className="text-sm text-blue-300">
               {new Date(currentStory.createdAt).toLocaleTimeString()}
             </p>
           </div>
         </div>
-        <button onClick={onClose} className="p-2">
+        <button onClick={onClose} className="p-2 hover:bg-blue-800/30 rounded-full transition-colors">
           <X className="w-6 h-6" />
         </button>
       </div>
 
       {/* Progress bars */}
-      <div className="flex space-x-1 px-4 pb-2">
+      <div className="flex space-x-2 px-6 pb-4">
         {currentGroup.stories.map((_, index) => (
-          <div key={index} className="flex-1 h-1 bg-gray-600 rounded">
+          <div key={index} className="flex-1 h-1 bg-blue-900/50 rounded-full overflow-hidden">
             <div
-              className={`h-full bg-white rounded transition-all duration-300 ${
+              className={`h-full bg-gradient-to-r from-blue-400 to-blue-200 rounded-full transition-all duration-300 ${
                 index < currentStoryIndex ? 'w-full' : 
                 index === currentStoryIndex ? 'w-full animate-pulse' : 'w-0'
               }`}
@@ -375,10 +383,10 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
 
       {/* Story info */}
       {currentStory.author._id === user?.id && (
-        <div className="p-4 bg-black bg-opacity-50 text-white">
-          <div className="flex items-center space-x-2">
-            <Eye className="w-4 h-4" />
-            <span className="text-sm">{currentStory.views.length} views</span>
+        <div className="p-6 bg-gradient-to-t from-black via-black/80 to-transparent text-blue-100">
+          <div className="flex items-center space-x-3 bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-blue-600/30">
+            <Eye className="w-5 h-5 text-blue-400" />
+            <span className="font-medium">{currentStory.views.length} views</span>
           </div>
         </div>
       )}

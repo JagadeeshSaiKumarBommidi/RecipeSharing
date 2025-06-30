@@ -60,42 +60,50 @@ export const ProfileSetupPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl premium-float"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl premium-float" style={{animationDelay: '2s'}}></div>
+      </div>
+      
+      <div className="max-w-2xl w-full relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Complete Your Profile</h1>
-          <p className="text-gray-600 text-lg">Let's personalize your RecipeShare experience</p>
+          <h1 className="text-4xl font-bold premium-text-gradient mb-2">Complete Your Profile</h1>
+          <p className="text-blue-200 text-lg">Let's personalize your RecipeShare experience</p>
         </div>
 
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= 1 ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-500'} mr-4`}>
+            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= 1 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white premium-shadow' : 'bg-slate-700 text-blue-300'} mr-4 transition-all duration-300`}>
               {step > 1 ? <Check className="w-5 h-5" /> : '1'}
             </div>
-            <div className={`h-1 w-16 ${step > 1 ? 'bg-orange-600' : 'bg-gray-200'} mr-4`}></div>
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= 2 ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
+            <div className={`h-1 w-16 ${step > 1 ? 'bg-gradient-to-r from-blue-600 to-indigo-600' : 'bg-slate-700'} mr-4 transition-all duration-300`}></div>
+            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= 2 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white premium-shadow' : 'bg-slate-700 text-blue-300'} transition-all duration-300`}>
               2
             </div>
           </div>
-          <div className="flex justify-center space-x-20 text-sm text-gray-600">
-            <span className={step >= 1 ? 'text-orange-600 font-semibold' : ''}>Profile Photo</span>
-            <span className={step >= 2 ? 'text-orange-600 font-semibold' : ''}>Bio</span>
+          <div className="flex justify-center space-x-20 text-sm text-blue-300">
+            <span className={step >= 1 ? 'text-blue-400 font-semibold' : ''}>Profile Photo</span>
+            <span className={step >= 2 ? 'text-blue-400 font-semibold' : ''}>Bio</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="premium-bg-card rounded-2xl premium-shadow-lg p-8 backdrop-blur-xl">
           {step === 1 ? (
             <div className="text-center">
               <div className="mb-8">
-                <Camera className="w-16 h-16 text-orange-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Add Your Profile Photo</h2>
-                <p className="text-gray-600">Help others recognize you in the community</p>
+                <div className="p-4 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl inline-block premium-shadow mb-4">
+                  <Camera className="w-16 h-16 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">Add Your Profile Photo</h2>
+                <p className="text-blue-200">Help others recognize you in the community</p>
               </div>
 
               <div className="mb-8">
                 <div className="relative inline-block">
-                  <div className="w-32 h-32 bg-gray-200 rounded-full overflow-hidden mx-auto mb-4">
+                  <div className="w-32 h-32 bg-slate-700 rounded-full overflow-hidden mx-auto mb-4 ring-4 ring-blue-500/30 premium-shadow">
                     {profileData.profilePicture ? (
                       <img
                         src={profileData.profilePicture}
@@ -104,11 +112,11 @@ export const ProfileSetupPage: React.FC = () => {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <User className="w-16 h-16 text-gray-400" />
+                        <User className="w-16 h-16 text-blue-400" />
                       </div>
                     )}
                   </div>
-                  <label className="absolute bottom-2 right-2 bg-orange-600 text-white p-2 rounded-full cursor-pointer hover:bg-orange-700 transition-colors">
+                  <label className="absolute bottom-2 right-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2 rounded-full cursor-pointer hover:from-blue-700 hover:to-indigo-700 transition-all premium-shadow">
                     <Upload className="w-5 h-5" />
                     <input
                       type="file"
@@ -123,13 +131,13 @@ export const ProfileSetupPage: React.FC = () => {
               <div className="flex space-x-4">
                 <button
                   onClick={handleSkip}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-semibold"
+                  className="flex-1 px-6 py-3 border border-blue-800/30 text-blue-300 rounded-xl hover:bg-slate-800/50 transition-all font-semibold backdrop-blur-sm"
                 >
                   Skip for Now
                 </button>
                 <button
                   onClick={handleNext}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl hover:from-orange-700 hover:to-red-700 transition-all font-semibold"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transition-all font-semibold premium-shadow hover:shadow-2xl transform hover:scale-105"
                 >
                   Next
                 </button>
@@ -138,9 +146,11 @@ export const ProfileSetupPage: React.FC = () => {
           ) : (
             <div className="text-center">
               <div className="mb-8">
-                <FileText className="w-16 h-16 text-orange-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Tell Us About Yourself</h2>
-                <p className="text-gray-600">Share what makes you passionate about cooking</p>
+                <div className="p-4 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl inline-block premium-shadow mb-4">
+                  <FileText className="w-16 h-16 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">Tell Us About Yourself</h2>
+                <p className="text-blue-200">Share what makes you passionate about cooking</p>
               </div>
 
               <div className="mb-8">
@@ -148,23 +158,23 @@ export const ProfileSetupPage: React.FC = () => {
                   value={profileData.bio}
                   onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
                   placeholder="I love experimenting with fusion cuisines and sharing family recipes that have been passed down through generations..."
-                  className="w-full h-32 p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                  className="w-full h-32 p-4 bg-slate-800/50 border border-blue-800/30 text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none placeholder-blue-300/50 backdrop-blur-sm"
                   maxLength={500}
                 />
-                <p className="text-sm text-gray-500 mt-2">{profileData.bio.length}/500 characters</p>
+                <p className="text-sm text-blue-300 mt-2">{profileData.bio.length}/500 characters</p>
               </div>
 
               <div className="flex space-x-4">
                 <button
                   onClick={handleSkip}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-semibold"
+                  className="flex-1 px-6 py-3 border border-blue-800/30 text-blue-300 rounded-xl hover:bg-slate-800/50 transition-all font-semibold backdrop-blur-sm"
                 >
                   Skip for Now
                 </button>
                 <button
                   onClick={handleNext}
                   disabled={loading}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl hover:from-orange-700 hover:to-red-700 transition-all font-semibold disabled:opacity-50"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transition-all font-semibold disabled:opacity-50 premium-shadow hover:shadow-2xl transform hover:scale-105"
                 >
                   {loading ? 'Saving...' : 'Complete Setup'}
                 </button>
@@ -174,7 +184,7 @@ export const ProfileSetupPage: React.FC = () => {
         </div>
 
         <div className="text-center mt-6">
-          <p className="text-gray-500 text-sm">
+          <p className="text-blue-300 text-sm">
             Welcome to RecipeShare, {user?.fullName}! 🍳
           </p>
         </div>

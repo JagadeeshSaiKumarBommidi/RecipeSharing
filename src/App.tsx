@@ -6,7 +6,7 @@ import { MainApp } from './components/MainApp';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 function AppContent() {
-  const { user, isAuthenticated, hasCompletedSetup } = useAuth();
+  const { isAuthenticated, hasCompletedSetup } = useAuth();
   const [showLanding, setShowLanding] = useState(true);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
         <AppContent />
       </div>
     </AuthProvider>
