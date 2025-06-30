@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Home, Users, MessageCircle, User, Plus, Search, Bell, Menu, X } from 'lucide-react';
+import { Home, Users, MessageCircle, User, Plus, Search, Bell, Menu, X, Gamepad2, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Feed } from './Feed';
 import { Profile } from './Profile';
 import { Friends } from './Friends';
 import { Chat } from './Chat';
 import { CreateRecipe } from './CreateRecipe';
+import { Games } from './Games';
+import { Shopping } from './Shopping';
 
 export const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState('feed');
@@ -16,6 +18,8 @@ export const MainApp: React.FC = () => {
   const tabs = [
     { id: 'feed', label: 'Feed', icon: Home },
     { id: 'friends', label: 'Friends', icon: Users },
+    { id: 'games', label: 'Games', icon: Gamepad2 },
+    { id: 'shopping', label: 'Shopping', icon: ShoppingCart },
     { id: 'chat', label: 'Messages', icon: MessageCircle },
     { id: 'profile', label: 'Profile', icon: User }
   ];
@@ -26,6 +30,10 @@ export const MainApp: React.FC = () => {
         return <Feed />;
       case 'friends':
         return <Friends />;
+      case 'games':
+        return <Games />;
+      case 'shopping':
+        return <Shopping />;
       case 'chat':
         return <Chat />;
       case 'profile':

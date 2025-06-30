@@ -120,10 +120,10 @@ export const Profile: React.FC = () => {
 
         {/* Profile Info */}
         <div className="px-6 pb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end space-y-4 sm:space-y-0 sm:space-x-6 -mt-12 relative">
+          <div className="flex flex-col items-center text-center -mt-12 relative">
             {/* Profile Picture */}
-            <div className="relative">
-              <div className="w-24 h-24 bg-white rounded-full p-1 shadow-lg overflow-hidden">
+            <div className="relative mb-6">
+              <div className="w-32 h-32 bg-white rounded-full p-1 shadow-lg overflow-hidden">
                 {(isEditing ? editData.profilePicture : profile.profilePicture) ? (
                   <img
                     src={isEditing ? editData.profilePicture : profile.profilePicture}
@@ -132,12 +132,12 @@ export const Profile: React.FC = () => {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-full">
-                    <User className="w-12 h-12 text-gray-400" />
+                    <User className="w-16 h-16 text-gray-400" />
                   </div>
                 )}
               </div>
               {isEditing && (
-                <label className="absolute bottom-0 right-0 bg-orange-600 text-white p-2 rounded-full cursor-pointer hover:bg-orange-700 transition-colors shadow-lg">
+                <label className="absolute bottom-2 right-2 bg-orange-600 text-white p-2 rounded-full cursor-pointer hover:bg-orange-700 transition-colors shadow-lg">
                   <Camera className="w-4 h-4" />
                   <input
                     type="file"
@@ -150,34 +150,34 @@ export const Profile: React.FC = () => {
             </div>
 
             {/* User Info */}
-            <div className="flex-1">
+            <div className="w-full max-w-md">
               {isEditing ? (
                 <div className="space-y-4">
                   <input
                     type="text"
                     value={editData.fullName}
                     onChange={(e) => setEditData(prev => ({ ...prev, fullName: e.target.value }))}
-                    className="text-2xl font-bold text-gray-900 border-b-2 border-orange-500 bg-transparent focus:outline-none w-full"
+                    className="text-3xl font-bold text-gray-900 border-b-2 border-orange-500 bg-transparent focus:outline-none w-full text-center"
                   />
                   <textarea
                     value={editData.bio}
                     onChange={(e) => setEditData(prev => ({ ...prev, bio: e.target.value }))}
                     placeholder="Tell us about yourself..."
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none text-center"
                     rows={3}
                   />
                 </div>
               ) : (
                 <>
-                  <h1 className="text-2xl font-bold text-gray-900">{profile.fullName}</h1>
-                  <p className="text-gray-600 mb-2">@{profile.username}</p>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{profile.fullName}</h1>
+                  <p className="text-lg text-gray-600 mb-4">@{profile.username}</p>
                   {profile.bio && (
-                    <p className="text-gray-700 mb-4">{profile.bio}</p>
+                    <p className="text-gray-700 mb-6 max-w-lg mx-auto leading-relaxed">{profile.bio}</p>
                   )}
                 </>
               )}
 
-              <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
+              <div className="flex items-center justify-center space-x-4 text-sm text-gray-500 mb-6">
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 mr-1" />
                   Joined {new Date(profile.createdAt).getFullYear()}
@@ -185,39 +185,39 @@ export const Profile: React.FC = () => {
               </div>
 
               {/* Stats */}
-              <div className="flex space-x-6 mb-6">
+              <div className="flex justify-center space-x-8 mb-8">
                 <div className="text-center">
-                  <div className="text-xl font-bold text-gray-900">{profile.recipes.length}</div>
+                  <div className="text-2xl font-bold text-gray-900">{profile.recipes.length}</div>
                   <div className="text-sm text-gray-500">Recipes</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl font-bold text-gray-900">{profile.followers.length}</div>
+                  <div className="text-2xl font-bold text-gray-900">{profile.followers.length}</div>
                   <div className="text-sm text-gray-500">Followers</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl font-bold text-gray-900">{profile.following.length}</div>
+                  <div className="text-2xl font-bold text-gray-900">{profile.following.length}</div>
                   <div className="text-sm text-gray-500">Following</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl font-bold text-gray-900">{profile.friends.length}</div>
+                  <div className="text-2xl font-bold text-gray-900">{profile.friends.length}</div>
                   <div className="text-sm text-gray-500">Friends</div>
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex space-x-2">
+            <div className="flex justify-center space-x-4">
               {isEditing ? (
                 <>
                   <button
                     onClick={handleSave}
-                    className="px-6 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg hover:from-orange-700 hover:to-red-700 transition-all font-semibold"
+                    className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg hover:from-orange-700 hover:to-red-700 transition-all font-semibold shadow-lg"
                   >
-                    Save
+                    Save Changes
                   </button>
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                    className="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
                   >
                     Cancel
                   </button>
@@ -226,12 +226,12 @@ export const Profile: React.FC = () => {
                 <>
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg hover:from-orange-700 hover:to-red-700 transition-all font-semibold"
+                    className="flex items-center px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg hover:from-orange-700 hover:to-red-700 transition-all font-semibold shadow-lg"
                   >
                     <Edit3 className="w-4 h-4 mr-2" />
                     Edit Profile
                   </button>
-                  <button className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold">
+                  <button className="flex items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold">
                     <Settings className="w-4 h-4 mr-2" />
                     Settings
                   </button>

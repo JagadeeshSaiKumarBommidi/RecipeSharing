@@ -148,4 +148,62 @@ router.get('/user/:userId', async (req, res) => {
   }
 });
 
+// Update recipe
+router.put('/:id', async (req, res) => {
+  try {
+    const recipe = await Recipe.findById(req.params.id);
+    
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+    
+    // Check if user is the author of the recipe
+    if (recipe.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this recipe' });
+    }
+    
+    const updatedRecipe = await Recipe.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body },
+      { new: true, runValidators: true }
+    ).populate('author', 'username fullName profilePicture')
+     .populate('likes.user', 'username fullName')
+     .populate('comments.user', 'username fullName profilePicture');
+    
+    res.json(updatedRecipe);
+  } catch (error) {
+    console.error('Update recipe error:', error);
+    res.status(500).json({ message: 'Error updating recipe' });
+  }
+});
+
+// Delete recipe
+router.delete('/:id', async (req, res) => {
+  try {
+    const recipe = await Recipe.findById(req.params.id);
+    
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+    
+    // Check if user is the author of the recipe
+    if (recipe.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this recipe' });
+    }
+    
+    // Remove recipe from user's recipes array
+    await User.findByIdAndUpdate(req.user._id, {
+      $pull: { recipes: recipe._id }
+    });
+    
+    // Delete the recipe
+    await Recipe.findByIdAndDelete(req.params.id);
+    
+    res.json({ message: 'Recipe deleted successfully' });
+  } catch (error) {
+    console.error('Delete recipe error:', error);
+    res.status(500).json({ message: 'Error deleting recipe' });
+  }
+});
+
 export default router;
