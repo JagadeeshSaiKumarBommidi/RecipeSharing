@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Share, Bookmark, MoreHorizontal, User, Clock, Users, Edit, Trash2, X } from 'lucide-react';
+import { Heart, MessageCircle, Share, Bookmark, MoreHorizontal, User, Clock, Users, Trophy, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Stories } from './Stories';
 import { StoryRing } from './StoryRing';
@@ -27,6 +27,7 @@ interface Recipe {
     createdAt: string;
   }>;
   createdAt: string;
+  isSaved?: boolean;
 }
 
 interface StoryGroup {
@@ -46,35 +47,61 @@ interface StoryGroup {
   hasUnviewed: boolean;
 }
 
+interface Challenge {
+  _id: string;
+  title: string;
+  description: string;
+  emoji: string;
+  startDate: string;
+  endDate: string;
+  prize: string;
+  participantsCount: number;
+  isActive: boolean;
+}
+
+interface SuggestedUser {
+  _id: string;
+  username: string;
+  fullName: string;
+  profilePicture?: string;
+  recipeCount: number;
+}
+
+interface UserStats {
+  recipesPosted: number;
+  totalLikes: number;
+  followersCount: number;
+}
+
 export const Feed: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({});
-  const [editingRecipe, setEditingRecipe] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ title: '', description: '', cookingTime: 0, difficulty: '', category: '' });
-  const [showDropdown, setShowDropdown] = useState<string | null>(null);
   const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
   const [showStories, setShowStories] = useState(false);
-  const [showCreateStory, setShowCreateStory] = useState(false);
+  const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
+  const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>([]);
+  const [userStats, setUserStats] = useState<UserStats>({
+    recipesPosted: 0,
+    totalLikes: 0,
+    followersCount: 0
+  });
+  const [showShareModal, setShowShareModal] = useState<string | null>(null);
+  const [savedRecipes, setSavedRecipes] = useState<Set<string>>(new Set());
+  
   const { user } = useAuth();
 
   useEffect(() => {
     fetchRecipes();
     fetchStories();
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (showDropdown && !(event.target as Element).closest('.dropdown-container')) {
-        setShowDropdown(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showDropdown]);
+    fetchCurrentChallenge();
+    fetchSuggestedUsers();
+    fetchSavedRecipes();
+    if (user?.id) {
+      fetchUserStats();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const fetchRecipes = async () => {
     try {
@@ -112,6 +139,119 @@ export const Feed: React.FC = () => {
     }
   };
 
+  const fetchCurrentChallenge = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/challenges/current', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentChallenge(data);
+      }
+    } catch (error) {
+      console.error('Error fetching challenge:', error);
+    }
+  };
+
+  const fetchSuggestedUsers = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/users/suggestions/new', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const usersWithRecipeCount = await Promise.all(
+          data.map(async (user: SuggestedUser) => {
+            try {
+              const recipesResponse = await fetch(`http://localhost:5000/api/recipes/user/${user._id}`, {
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+              });
+              const recipes = recipesResponse.ok ? await recipesResponse.json() : [];
+              return {
+                ...user,
+                recipeCount: recipes.length
+              };
+            } catch {
+              return {
+                ...user,
+                recipeCount: 0
+              };
+            }
+          })
+        );
+        setSuggestedUsers(usersWithRecipeCount.slice(0, 3));
+      }
+    } catch (error) {
+      console.error('Error fetching suggested users:', error);
+    }
+  };
+
+  const fetchUserStats = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const recipesResponse = await fetch(`http://localhost:5000/api/recipes/user/${user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      let recipesPosted = 0;
+      let totalLikes = 0;
+      
+      if (recipesResponse.ok) {
+        const recipes = await recipesResponse.json();
+        recipesPosted = recipes.length;
+        totalLikes = recipes.reduce((sum: number, recipe: Recipe) => sum + (recipe.likes?.length || 0), 0);
+      }
+      
+      const profileResponse = await fetch('http://localhost:5000/api/users/profile', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      let followersCount = 0;
+      if (profileResponse.ok) {
+        const profile = await profileResponse.json();
+        followersCount = profile.followers?.length || 0;
+      }
+      
+      setUserStats({
+        recipesPosted,
+        totalLikes,
+        followersCount
+      });
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    }
+  };
+
+  const fetchSavedRecipes = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/recipes/saved', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSavedRecipes(new Set(data.map((recipe: Recipe) => recipe._id)));
+      }
+    } catch (error) {
+      console.error('Error fetching saved recipes:', error);
+    }
+  };
+
   const handleLike = async (recipeId: string) => {
     try {
       const response = await fetch(`http://localhost:5000/api/recipes/${recipeId}/like`, {
@@ -123,20 +263,102 @@ export const Feed: React.FC = () => {
 
       if (response.ok) {
         const updatedRecipe = await response.json();
-        setRecipes(prevRecipes =>
-          prevRecipes.map(recipe =>
-            recipe._id === recipeId ? updatedRecipe : recipe
-          )
-        );
+        setRecipes(prev => prev.map(recipe => 
+          recipe._id === recipeId ? updatedRecipe : recipe
+        ));
       }
     } catch (error) {
       console.error('Error liking recipe:', error);
     }
   };
 
+  const handleSave = async (recipeId: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/recipes/${recipeId}/save`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.saved) {
+          setSavedRecipes(prev => new Set([...prev, recipeId]));
+        } else {
+          setSavedRecipes(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(recipeId);
+            return newSet;
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error saving recipe:', error);
+    }
+  };
+
+  const handleShare = async (recipe: Recipe) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: recipe.title,
+          text: recipe.description,
+          url: window.location.href + `?recipe=${recipe._id}`
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    } else {
+      // Fallback: Copy to clipboard
+      const shareText = `Check out this recipe: ${recipe.title}\n${recipe.description}\n${window.location.href}?recipe=${recipe._id}`;
+      navigator.clipboard.writeText(shareText);
+      setShowShareModal(recipe._id);
+      setTimeout(() => setShowShareModal(null), 2000);
+    }
+  };
+
+  const handleJoinChallenge = async () => {
+    if (!currentChallenge) return;
+    
+    try {
+      const response = await fetch(`http://localhost:5000/api/challenges/${currentChallenge._id}/join`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        // Refresh challenge data
+        fetchCurrentChallenge();
+      }
+    } catch (error) {
+      console.error('Error joining challenge:', error);
+    }
+  };
+
+  const handleFollowUser = async (userId: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/${userId}/follow`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        setSuggestedUsers(prev => prev.filter(user => user._id !== userId));
+        await fetchSuggestedUsers();
+      }
+    } catch (error) {
+      console.error('Error following user:', error);
+    }
+  };
+
   const handleComment = async (recipeId: string) => {
-    const text = commentTexts[recipeId]?.trim();
-    if (!text) return;
+    const commentText = commentTexts[recipeId];
+    if (!commentText?.trim()) return;
 
     try {
       const response = await fetch(`http://localhost:5000/api/recipes/${recipeId}/comment`, {
@@ -145,98 +367,19 @@ export const Feed: React.FC = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ text: commentText })
       });
 
       if (response.ok) {
         const updatedRecipe = await response.json();
-        setRecipes(prevRecipes =>
-          prevRecipes.map(recipe =>
-            recipe._id === recipeId ? updatedRecipe : recipe
-          )
-        );
+        setRecipes(prev => prev.map(recipe => 
+          recipe._id === recipeId ? updatedRecipe : recipe
+        ));
         setCommentTexts(prev => ({ ...prev, [recipeId]: '' }));
       }
     } catch (error) {
-      console.error('Error commenting on recipe:', error);
+      console.error('Error adding comment:', error);
     }
-  };
-
-  const handleEdit = (recipe: Recipe) => {
-    setEditingRecipe(recipe._id);
-    setEditForm({
-      title: recipe.title,
-      description: recipe.description,
-      cookingTime: recipe.cookingTime,
-      difficulty: recipe.difficulty,
-      category: recipe.category
-    });
-    setShowDropdown(null);
-  };
-
-  const handleSaveEdit = async (recipeId: string) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/recipes/${recipeId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(editForm)
-      });
-
-      if (response.ok) {
-        const updatedRecipe = await response.json();
-        setRecipes(prevRecipes =>
-          prevRecipes.map(recipe =>
-            recipe._id === recipeId ? updatedRecipe : recipe
-          )
-        );
-        setEditingRecipe(null);
-        setEditForm({ title: '', description: '', cookingTime: 0, difficulty: '', category: '' });
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Failed to update recipe');
-      }
-    } catch (error) {
-      console.error('Error updating recipe:', error);
-      alert('Failed to update recipe');
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingRecipe(null);
-    setEditForm({ title: '', description: '', cookingTime: 0, difficulty: '', category: '' });
-  };
-
-  const handleDelete = async (recipeId: string) => {
-    if (!window.confirm('Are you sure you want to delete this recipe? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`http://localhost:5000/api/recipes/${recipeId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (response.ok) {
-        setRecipes(prevRecipes => prevRecipes.filter(recipe => recipe._id !== recipeId));
-        setShowDropdown(null);
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Failed to delete recipe');
-      }
-    } catch (error) {
-      console.error('Error deleting recipe:', error);
-      alert('Failed to delete recipe');
-    }
-  };
-
-  const isAuthor = (recipe: Recipe) => {
-    return recipe.author._id === user?.id;
   };
 
   if (loading) {
@@ -291,52 +434,21 @@ export const Feed: React.FC = () => {
       <div className="max-w-7xl mx-auto flex gap-6 p-4 pb-20 md:pb-4">
         {/* Left Sidebar */}
         <div className="hidden lg:block w-64 space-y-6">
-          {/* Quick Actions */}
-          <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <button className="w-full flex items-center space-x-3 p-3 text-blue-200 hover:text-white hover:bg-slate-700/50 rounded-xl transition-all">
-                <Heart className="w-5 h-5" />
-                <span>Liked Recipes</span>
-              </button>
-              <button className="w-full flex items-center space-x-3 p-3 text-blue-200 hover:text-white hover:bg-slate-700/50 rounded-xl transition-all">
-                <Bookmark className="w-5 h-5" />
-                <span>Saved Recipes</span>
-              </button>
-              <button className="w-full flex items-center space-x-3 p-3 text-blue-200 hover:text-white hover:bg-slate-700/50 rounded-xl transition-all">
-                <Users className="w-5 h-5" />
-                <span>My Followers</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Trending Categories */}
-          <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-white mb-4">Trending Categories</h3>
-            <div className="space-y-2">
-              {['Italian', 'Asian Fusion', 'Desserts', 'Healthy', 'Quick Meals'].map((category) => (
-                <button key={category} className="w-full text-left p-2 text-blue-200 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all">
-                  #{category}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Recipe Stats */}
+          {/* Your Stats */}
           <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
             <h3 className="text-lg font-semibold text-white mb-4">Your Stats</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-blue-200">Recipes Posted</span>
-                <span className="text-white font-semibold">12</span>
+                <span className="text-white font-semibold">{userStats.recipesPosted}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-blue-200">Total Likes</span>
-                <span className="text-white font-semibold">284</span>
+                <span className="text-white font-semibold">{userStats.totalLikes}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-blue-200">Followers</span>
-                <span className="text-white font-semibold">67</span>
+                <span className="text-white font-semibold">{userStats.followersCount}</span>
               </div>
             </div>
           </div>
@@ -345,82 +457,30 @@ export const Feed: React.FC = () => {
         {/* Main Feed */}
         <div className="flex-1 max-w-2xl mx-auto lg:mx-0">
           {/* Stories Section */}
-          <div className="mb-8">
-            <div className="flex space-x-4 overflow-x-auto py-4 scrollbar-hide bg-slate-800/50 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/50">
-              {/* Add Your Story */}
-              <StoryRing
-                author={{
-                  _id: user?.id || '',
-                  username: user?.username || '',
-                  fullName: user?.fullName || '',
-                  profilePicture: user?.profilePicture
-                }}
-                hasUnviewed={false}
-                isOwn={true}
-                onClick={() => setShowCreateStory(true)}
-              />
-              
-              {/* Friends' Stories */}
-              {storyGroups.map((storyGroup) => (
-                <StoryRing
-                  key={storyGroup.author._id}
-                  author={storyGroup.author}
-                  hasUnviewed={storyGroup.hasUnviewed}
-                  onClick={() => setShowStories(true)}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Stories Viewer */}
-          {showStories && (
-            <Stories onClose={() => setShowStories(false)} />
-          )}
-
-          {/* Create Story Modal */}
-          {showCreateStory && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-8 w-96 max-w-[90vw] border border-blue-600/30 shadow-2xl">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-200 bg-clip-text text-transparent">Create Story</h2>
-                  <button
-                    onClick={() => setShowCreateStory(false)}
-                    className="p-2 hover:bg-slate-700/50 rounded-full transition-colors"
-                  >
-                    <X className="w-6 h-6 text-blue-200" />
-                  </button>
-                </div>
-                
-                <div className="mb-6">
-                  <div className="w-full h-48 bg-gradient-to-br from-blue-600 via-blue-700 to-slate-800 rounded-2xl flex items-center justify-center p-6 mb-4 border border-blue-500/30">
-                    <textarea
-                      placeholder="Share what's on your mind..."
-                      className="w-full h-full bg-transparent text-blue-100 text-center text-lg resize-none outline-none placeholder-blue-300/60"
-                    />
+          {storyGroups.length > 0 && (
+            <div className="premium-bg-card rounded-2xl p-4 mb-6 premium-shadow backdrop-blur-xl">
+              <div className="flex items-center space-x-4 overflow-x-auto pb-2">
+                <button
+                  className="flex-shrink-0 flex flex-col items-center space-y-2"
+                >
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center border-2 border-dashed border-blue-400">
+                    <Plus className="w-6 h-6 text-white" />
                   </div>
-                </div>
-                
-                <div className="flex space-x-4">
-                  <button
-                    onClick={() => setShowCreateStory(false)}
-                    className="flex-1 px-6 py-3 border border-slate-600 text-blue-200 rounded-xl hover:bg-slate-700/50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={async () => {
-                      setShowCreateStory(false);
-                      await fetchStories();
-                    }}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl hover:from-blue-700 hover:to-blue-600 transition-all shadow-lg"
-                  >
-                    Share Story
-                  </button>
-                </div>
+                  <span className="text-xs text-blue-200">Your Story</span>
+                </button>
+                {storyGroups.map((group) => (
+                  <StoryRing
+                    key={group.author._id}
+                    author={group.author}
+                    hasUnviewed={group.hasUnviewed}
+                    onClick={() => setShowStories(true)}
+                  />
+                ))}
               </div>
             </div>
           )}
 
+          {/* Recipes */}
           {recipes.length === 0 ? (
             <div className="text-center py-12">
               <Users className="w-16 h-16 text-blue-300 mx-auto mb-4" />
@@ -452,68 +512,47 @@ export const Feed: React.FC = () => {
                         <p className="text-sm text-blue-300">@{recipe.author.username}</p>
                       </div>
                     </div>
-                    <div className="relative dropdown-container">
-                      <button 
-                        onClick={() => setShowDropdown(showDropdown === recipe._id ? null : recipe._id)}
-                        className="p-2 hover:bg-slate-700/50 rounded-full transition-colors"
-                      >
-                        <MoreHorizontal className="w-5 h-5 text-blue-300" />
-                      </button>
-                      {showDropdown === recipe._id && (
-                        <div className="absolute right-0 mt-2 w-48 premium-bg-card rounded-lg premium-shadow border border-slate-600/50 z-10 backdrop-blur-xl">
-                          {isAuthor(recipe) && (
-                            <>
-                              <button
-                                onClick={() => handleEdit(recipe)}
-                                className="w-full flex items-center px-4 py-2 text-sm text-blue-200 hover:bg-slate-700/50 transition-colors"
-                              >
-                                <Edit className="w-4 h-4 mr-2" />
-                                Edit Recipe
-                              </button>
-                              <button
-                                onClick={() => handleDelete(recipe._id)}
-                                className="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 transition-colors"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete Recipe
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    <button className="p-2 hover:bg-slate-700/50 rounded-full transition-colors">
+                      <MoreHorizontal className="w-5 h-5 text-blue-300" />
+                    </button>
                   </div>
 
-                  {/* Recipe Images */}
-                  {recipe.images && recipe.images.length > 0 && (
-                    <div className="relative">
+                  {/* Media */}
+                  {recipe.images.length > 0 && (
+                    <div className="aspect-square bg-slate-800 relative">
                       <img
                         src={recipe.images[0]}
                         alt={recipe.title}
-                        className="w-full h-80 object-cover"
+                        className="w-full h-full object-cover"
                       />
+                      {showShareModal === recipe._id && (
+                        <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm">
+                          Link copied!
+                        </div>
+                      )}
                     </div>
                   )}
 
                   {/* Recipe Content */}
                   <div className="p-4">
-                    <div className="flex items-center space-x-4 mb-3 text-sm text-blue-300">
-                      <div className="flex items-center space-x-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{recipe.cookingTime} mins</span>
+                    <h2 className="text-xl font-bold text-white mb-2">{recipe.title}</h2>
+                    <p className="text-blue-200 mb-4 leading-relaxed">{recipe.description}</p>
+                    
+                    {/* Recipe Meta */}
+                    <div className="flex items-center space-x-4 text-sm text-blue-300 mb-4">
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        {recipe.cookingTime} mins
                       </div>
-                      <span className="px-2 py-1 bg-blue-600/20 text-blue-300 rounded-full text-xs">
+                      <span className="px-2 py-1 bg-orange-500/20 text-orange-300 rounded-lg font-medium">
                         {recipe.difficulty}
                       </span>
-                      <span className="px-2 py-1 bg-blue-600/20 text-blue-300 rounded-full text-xs">
+                      <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-lg font-medium">
                         {recipe.category}
                       </span>
                     </div>
 
-                    <h2 className="text-xl font-bold text-white mb-2">{recipe.title}</h2>
-                    <p className="text-blue-200 mb-4 leading-relaxed">{recipe.description}</p>
-
-                    {/* Recipe Actions */}
+                    {/* Actions */}
                     <div className="flex items-center justify-between border-t border-slate-700/50 pt-4">
                       <div className="flex items-center space-x-6">
                         <button
@@ -533,13 +572,23 @@ export const Feed: React.FC = () => {
                           <span className="text-sm font-medium">{recipe.comments.length}</span>
                         </button>
 
-                        <button className="flex items-center space-x-2 text-blue-300 hover:text-white transition-colors">
+                        <button 
+                          onClick={() => handleShare(recipe)}
+                          className="flex items-center space-x-2 text-blue-300 hover:text-white transition-colors"
+                        >
                           <Share className="w-5 h-5" />
                         </button>
                       </div>
 
-                      <button className="text-blue-300 hover:text-white transition-colors">
-                        <Bookmark className="w-5 h-5" />
+                      <button 
+                        onClick={() => handleSave(recipe._id)}
+                        className={`transition-colors ${
+                          savedRecipes.has(recipe._id) 
+                            ? 'text-yellow-400' 
+                            : 'text-blue-300 hover:text-yellow-400'
+                        }`}
+                      >
+                        <Bookmark className={`w-5 h-5 ${savedRecipes.has(recipe._id) ? 'fill-current' : ''}`} />
                       </button>
                     </div>
 
@@ -608,65 +657,6 @@ export const Feed: React.FC = () => {
                         </button>
                       </div>
                     </div>
-
-                    {/* Edit Recipe */}
-                    {editingRecipe === recipe._id && (
-                      <div className="mt-4 border-t border-slate-700/50 pt-4">
-                        <div className="flex flex-col space-y-4">
-                          <input
-                            type="text"
-                            value={editForm.title}
-                            onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
-                            className="px-3 py-2 bg-slate-800/50 border border-slate-600/50 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-blue-300/50"
-                            placeholder="Recipe title"
-                          />
-                          <textarea
-                            value={editForm.description}
-                            onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
-                            className="px-3 py-2 bg-slate-800/50 border border-slate-600/50 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-blue-300/50"
-                            placeholder="Recipe description"
-                            rows={3}
-                          />
-                          <div className="grid grid-cols-2 gap-x-4">
-                            <input
-                              type="number"
-                              value={editForm.cookingTime}
-                              onChange={(e) => setEditForm(prev => ({ ...prev, cookingTime: Number(e.target.value) }))}
-                              className="px-3 py-2 bg-slate-800/50 border border-slate-600/50 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-blue-300/50"
-                              placeholder="Cooking time (mins)"
-                            />
-                            <input
-                              type="text"
-                              value={editForm.difficulty}
-                              onChange={(e) => setEditForm(prev => ({ ...prev, difficulty: e.target.value }))}
-                              className="px-3 py-2 bg-slate-800/50 border border-slate-600/50 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-blue-300/50"
-                              placeholder="Difficulty level"
-                            />
-                          </div>
-                          <input
-                            type="text"
-                            value={editForm.category}
-                            onChange={(e) => setEditForm(prev => ({ ...prev, category: e.target.value }))}
-                            className="px-3 py-2 bg-slate-800/50 border border-slate-600/50 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-blue-300/50"
-                            placeholder="Category"
-                          />
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleSaveEdit(recipe._id)}
-                              className="flex-1 px-4 py-2 text-sm font-semibold bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all"
-                            >
-                              Save
-                            </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              className="flex-1 px-4 py-2 text-sm font-semibold bg-slate-700 text-blue-200 rounded-lg hover:bg-slate-600 transition-colors"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </article>
               ))}
@@ -680,76 +670,85 @@ export const Feed: React.FC = () => {
           <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
             <h3 className="text-lg font-semibold text-white mb-4">Suggested Friends</h3>
             <div className="space-y-4">
-              {[
-                { name: 'Sarah Wilson', username: 'sarahcooks', recipes: 24 },
-                { name: 'Mike Chen', username: 'mikekitchen', recipes: 18 },
-                { name: 'Emma Davis', username: 'emmabakes', recipes: 31 }
-              ].map((friend) => (
-                <div key={friend.username} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-white font-medium text-sm">{friend.name}</p>
-                      <p className="text-blue-300 text-xs">{friend.recipes} recipes</p>
-                    </div>
-                  </div>
-                  <button className="px-3 py-1 bg-gradient-to-r from-blue-600 to-blue-500 text-white text-xs rounded-full hover:from-blue-700 hover:to-blue-600 transition-all">
-                    Follow
-                  </button>
+              {suggestedUsers.length === 0 ? (
+                <div className="text-center py-4">
+                  <User className="w-12 h-12 text-blue-300 mx-auto mb-2" />
+                  <p className="text-blue-200 text-sm">No suggestions available</p>
                 </div>
-              ))}
+              ) : (
+                suggestedUsers.map((friend) => (
+                  <div key={friend.username} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full overflow-hidden">
+                        {friend.profilePicture ? (
+                          <img
+                            src={friend.profilePicture}
+                            alt={friend.fullName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <User className="w-5 h-5 text-white" />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-white font-medium text-sm">{friend.fullName}</p>
+                        <p className="text-blue-300 text-xs">{friend.recipeCount} recipes</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => handleFollowUser(friend._id)}
+                      className="px-3 py-1 bg-gradient-to-r from-blue-600 to-blue-500 text-white text-xs rounded-full hover:from-blue-700 hover:to-blue-600 transition-all"
+                    >
+                      Follow
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
           {/* Weekly Challenge */}
           <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
             <h3 className="text-lg font-semibold text-white mb-4">Weekly Challenge</h3>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-2xl">🏆</span>
-              </div>
-              <h4 className="text-white font-semibold mb-2">Comfort Food Week</h4>
-              <p className="text-blue-200 text-sm mb-4">Share your favorite comfort food recipe and win prizes!</p>
-              <button className="w-full px-4 py-2 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl hover:from-yellow-700 hover:to-orange-700 transition-all text-sm font-semibold">
-                Join Challenge
-              </button>
-            </div>
-          </div>
-
-          {/* Popular Recipes */}
-          <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-white mb-4">Popular This Week</h3>
-            <div className="space-y-3">
-              {[
-                { title: 'Creamy Pasta Carbonara', likes: 142 },
-                { title: 'Korean BBQ Tacos', likes: 128 },
-                { title: 'Chocolate Lava Cake', likes: 156 }
-              ].map((recipe, index) => (
-                <div key={index} className="flex items-center space-x-3 p-2 hover:bg-slate-700/30 rounded-lg transition-colors cursor-pointer">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">{index + 1}</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-white text-sm font-medium">{recipe.title}</p>
-                    <p className="text-blue-300 text-xs">{recipe.likes} likes</p>
-                  </div>
+            {currentChallenge ? (
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-2xl">{currentChallenge.emoji}</span>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Recipe Tips */}
-          <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-white mb-4">💡 Pro Tip</h3>
-            <p className="text-blue-200 text-sm leading-relaxed">
-              "Always taste your food as you cook! Seasoning should be adjusted throughout the cooking process, not just at the end."
-            </p>
-            <p className="text-blue-300 text-xs mt-2">- Chef Maria Rodriguez</p>
+                <h4 className="text-white font-semibold mb-2">{currentChallenge.title}</h4>
+                <p className="text-blue-200 text-sm mb-4">{currentChallenge.description}</p>
+                <div className="flex items-center justify-center space-x-2 text-blue-300 text-xs mb-4">
+                  <Users className="w-4 h-4" />
+                  <span>{currentChallenge.participantsCount} participants</span>
+                </div>
+                <button 
+                  onClick={handleJoinChallenge}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl hover:from-yellow-700 hover:to-orange-700 transition-all text-sm font-semibold"
+                >
+                  Join Challenge
+                </button>
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Trophy className="w-8 h-8 text-white" />
+                </div>
+                <h4 className="text-white font-semibold mb-2">No Active Challenge</h4>
+                <p className="text-blue-200 text-sm">Check back soon for new challenges!</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Stories Modal */}
+      {showStories && (
+        <Stories
+          onClose={() => setShowStories(false)}
+        />
+      )}
     </div>
   );
 };

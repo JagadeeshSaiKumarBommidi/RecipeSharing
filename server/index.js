@@ -23,7 +23,7 @@ import userRoutes from './routes/users.js';
 import recipeRoutes from './routes/recipes.js';
 import friendRoutes from './routes/friends.js';
 import chatRoutes from './routes/chat.js';
-import storyRoutes from './routes/stories.js';
+import challengeRoutes from './routes/challenges.js';
 import { authenticateToken } from './middleware/auth.js';
 
 // Validate required environment variables
@@ -79,7 +79,7 @@ app.use('/api/users', authenticateToken, userRoutes);
 app.use('/api/recipes', authenticateToken, recipeRoutes);
 app.use('/api/friends', authenticateToken, friendRoutes);
 app.use('/api/chat', authenticateToken, chatRoutes);
-app.use('/api/stories', authenticateToken, storyRoutes);
+app.use('/api/challenges', authenticateToken, challengeRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

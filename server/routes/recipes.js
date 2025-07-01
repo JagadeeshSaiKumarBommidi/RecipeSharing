@@ -82,14 +82,26 @@ router.post('/:id/like', async (req, res) => {
       like => like.user.toString() === req.user._id.toString()
     );
     
+    const user = await User.findById(req.user._id);
+    
     if (existingLike) {
       // Unlike
       recipe.likes = recipe.likes.filter(
         like => like.user.toString() !== req.user._id.toString()
       );
+      // Remove from user's liked recipes
+      if (user) {
+        user.likedRecipes = user.likedRecipes.filter(id => !id.equals(req.params.id));
+        await user.save();
+      }
     } else {
       // Like
       recipe.likes.push({ user: req.user._id });
+      // Add to user's liked recipes
+      if (user && !user.likedRecipes.includes(req.params.id)) {
+        user.likedRecipes.push(req.params.id);
+        await user.save();
+      }
     }
     
     await recipe.save();
@@ -203,6 +215,88 @@ router.delete('/:id', async (req, res) => {
   } catch (error) {
     console.error('Delete recipe error:', error);
     res.status(500).json({ message: 'Error deleting recipe' });
+  }
+});
+
+// Get user's liked recipes
+router.get('/liked', async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate({
+      path: 'likedRecipes',
+      populate: {
+        path: 'author',
+        select: 'username fullName profilePicture'
+      }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json(user.likedRecipes || []);
+  } catch (error) {
+    console.error('Error fetching liked recipes:', error);
+    res.status(500).json({ message: 'Error fetching liked recipes' });
+  }
+});
+
+// Get user's saved recipes
+router.get('/saved', async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate({
+      path: 'savedRecipes',
+      populate: {
+        path: 'author',
+        select: 'username fullName profilePicture'
+      }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json(user.savedRecipes || []);
+  } catch (error) {
+    console.error('Error fetching saved recipes:', error);
+    res.status(500).json({ message: 'Error fetching saved recipes' });
+  }
+});
+
+// Save/unsave recipe
+router.post('/:id/save', async (req, res) => {
+  try {
+    const recipeId = req.params.id;
+    const userId = req.user._id;
+    
+    const recipe = await Recipe.findById(recipeId);
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    const isAlreadySaved = user.savedRecipes.includes(recipeId);
+    
+    if (isAlreadySaved) {
+      // Remove from saved recipes
+      user.savedRecipes = user.savedRecipes.filter(id => !id.equals(recipeId));
+    } else {
+      // Add to saved recipes
+      user.savedRecipes.push(recipeId);
+    }
+    
+    await user.save();
+    
+    res.json({ 
+      saved: !isAlreadySaved,
+      message: isAlreadySaved ? 'Recipe unsaved' : 'Recipe saved'
+    });
+  } catch (error) {
+    console.error('Error saving/unsaving recipe:', error);
+    res.status(500).json({ message: 'Error saving recipe' });
   }
 });
 

@@ -98,4 +98,70 @@ router.get('/suggestions/new', async (req, res) => {
   }
 });
 
+// Get user's followers
+router.get('/followers', async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate('followers', 'username fullName profilePicture bio createdAt')
+      .select('followers');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Add followedAt field based on createdAt for now (you can extend this later with a proper follow timestamp)
+    const followersWithTimestamp = user.followers.map(follower => ({
+      ...follower.toObject(),
+      followedAt: follower.createdAt
+    }));
+    
+    res.json(followersWithTimestamp);
+  } catch (error) {
+    console.error('Error fetching followers:', error);
+    res.status(500).json({ message: 'Error fetching followers' });
+  }
+});
+
+// Follow/unfollow user
+router.post('/:userId/follow', async (req, res) => {
+  try {
+    const targetUserId = req.params.userId;
+    const currentUserId = req.user._id;
+    
+    if (targetUserId === currentUserId.toString()) {
+      return res.status(400).json({ message: 'Cannot follow yourself' });
+    }
+    
+    const targetUser = await User.findById(targetUserId);
+    const currentUser = await User.findById(currentUserId);
+    
+    if (!targetUser || !currentUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    const isAlreadyFollowing = currentUser.following.includes(targetUserId);
+    
+    if (isAlreadyFollowing) {
+      // Unfollow
+      currentUser.following = currentUser.following.filter(id => !id.equals(targetUserId));
+      targetUser.followers = targetUser.followers.filter(id => !id.equals(currentUserId));
+    } else {
+      // Follow
+      currentUser.following.push(targetUserId);
+      targetUser.followers.push(currentUserId);
+    }
+    
+    await currentUser.save();
+    await targetUser.save();
+    
+    res.json({ 
+      following: !isAlreadyFollowing,
+      message: isAlreadyFollowing ? 'User unfollowed' : 'User followed'
+    });
+  } catch (error) {
+    console.error('Error following/unfollowing user:', error);
+    res.status(500).json({ message: 'Error following user' });
+  }
+});
+
 export default router;

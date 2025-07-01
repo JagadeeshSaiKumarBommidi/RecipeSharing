@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "dev:setup": "npm run seed:challenges && npm run dev",
+    "dev:full": "node setup-dev.js",
     "client": "vite",
     "server": "nodemon server/index.js",
+    "seed:challenges": "node server/seeds/seedChallenges.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
