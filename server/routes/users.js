@@ -122,6 +122,33 @@ router.get('/followers', async (req, res) => {
   }
 });
 
+// Get user's followers list (alternative endpoint for Feed sidebar)
+router.get('/followers-list', async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate('followers', 'username fullName profilePicture bio createdAt')
+      .select('followers');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Format for sidebar display
+    const followersList = user.followers.map(follower => ({
+      _id: follower._id,
+      username: follower.username,
+      fullName: follower.fullName,
+      profilePicture: follower.profilePicture,
+      followedAt: follower.createdAt
+    }));
+    
+    res.json(followersList);
+  } catch (error) {
+    console.error('Error fetching followers list:', error);
+    res.status(500).json({ message: 'Error fetching followers' });
+  }
+});
+
 // Follow/unfollow user
 router.post('/:userId/follow', async (req, res) => {
   try {

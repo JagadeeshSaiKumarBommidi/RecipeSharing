@@ -13,13 +13,14 @@ router.get('/current', async (req, res) => {
     }).populate('participants.user', 'username fullName profilePicture');
     
     if (!challenge) {
-      return res.status(404).json({ message: 'No active challenge found' });
+      // Return null instead of 404 to avoid errors in frontend
+      return res.json(null);
     }
     
     res.json(challenge);
   } catch (error) {
     console.error('Error fetching current challenge:', error);
-    res.status(500).json({ message: 'Error fetching challenge' });
+    res.status(500).json({ message: 'Error fetching challenge', error: error.message });
   }
 });
 

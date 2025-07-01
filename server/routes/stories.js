@@ -1,16 +1,73 @@
 import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import Story from '../models/Story.js';
 import User from '../models/User.js';
 
 const router = express.Router();
 
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = 'uploads/stories';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image and video files are allowed!'), false);
+    }
+  }
+});
+
 // Create a story
-router.post('/', async (req, res) => {
+router.post('/', upload.single('media'), async (req, res) => {
   try {
+    // Check if user is authenticated
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    const { content, backgroundColor, textColor, fontSize, textAlign, type } = req.body;
+    
+    // Validate required fields
+    if (!content && !req.file) {
+      return res.status(400).json({ message: 'Story must have either content or media' });
+    }
+    
     const storyData = {
-      ...req.body,
-      author: req.user._id
+      author: req.user._id,
+      content: content || '',
+      backgroundColor: backgroundColor || '#1e293b',
+      textColor: textColor || '#ffffff'
     };
+    
+    // Add media file if uploaded
+    if (req.file) {
+      storyData.image = `/uploads/stories/${req.file.filename}`;
+    }
+    
+    // Add text styling for text stories
+    if (type === 'text') {
+      storyData.fontSize = parseInt(fontSize) || 24;
+      storyData.textAlign = textAlign || 'center';
+    }
     
     const story = new Story(storyData);
     await story.save();
@@ -21,16 +78,25 @@ router.post('/', async (req, res) => {
     res.status(201).json(populatedStory);
   } catch (error) {
     console.error('Create story error:', error);
-    res.status(500).json({ message: 'Error creating story' });
+    res.status(500).json({ message: 'Error creating story', error: error.message });
   }
 });
 
 // Get stories from friends and own stories
 router.get('/feed', async (req, res) => {
   try {
+    // Check if user exists
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     // Get current user with friends list
     const currentUser = await User.findById(req.user._id).populate('friends');
-    const friendIds = currentUser.friends.map(friend => friend._id);
+    if (!currentUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const friendIds = currentUser.friends ? currentUser.friends.map(friend => friend._id) : [];
     
     // Include current user's ID to show their own stories
     const userIds = [req.user._id, ...friendIds];
@@ -58,7 +124,9 @@ router.get('/feed', async (req, res) => {
       }
       
       // Check if current user has viewed this story
-      const hasViewed = story.views.some(view => view.user._id.toString() === req.user._id.toString());
+      const hasViewed = story.views.some(view => 
+        view.user && view.user._id && view.user._id.toString() === req.user._id.toString()
+      );
       if (!hasViewed) {
         storiesByAuthor[authorId].hasUnviewed = true;
       }
@@ -76,7 +144,7 @@ router.get('/feed', async (req, res) => {
     res.json(groupedStories);
   } catch (error) {
     console.error('Error fetching stories:', error);
-    res.status(500).json({ message: 'Error fetching stories' });
+    res.status(500).json({ message: 'Error fetching stories', error: error.message });
   }
 });
 

@@ -25,6 +25,15 @@ const storySchema = new mongoose.Schema({
     type: String,
     default: 'Arial'
   },
+  fontSize: {
+    type: Number,
+    default: 24
+  },
+  textAlign: {
+    type: String,
+    enum: ['left', 'center', 'right'],
+    default: 'center'
+  },
   views: [{
     user: {
       type: mongoose.Schema.Types.ObjectId,

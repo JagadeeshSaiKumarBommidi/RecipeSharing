@@ -221,6 +221,11 @@ router.delete('/:id', async (req, res) => {
 // Get user's liked recipes
 router.get('/liked', async (req, res) => {
   try {
+    // Check if user is authenticated
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     const user = await User.findById(req.user._id).populate({
       path: 'likedRecipes',
       populate: {
@@ -233,16 +238,23 @@ router.get('/liked', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    res.json(user.likedRecipes || []);
+    // Ensure likedRecipes is always an array
+    const likedRecipes = user.likedRecipes || [];
+    res.json(likedRecipes);
   } catch (error) {
     console.error('Error fetching liked recipes:', error);
-    res.status(500).json({ message: 'Error fetching liked recipes' });
+    res.status(500).json({ message: 'Error fetching liked recipes', error: error.message });
   }
 });
 
 // Get user's saved recipes
 router.get('/saved', async (req, res) => {
   try {
+    // Check if user is authenticated
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     const user = await User.findById(req.user._id).populate({
       path: 'savedRecipes',
       populate: {
@@ -255,10 +267,12 @@ router.get('/saved', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    res.json(user.savedRecipes || []);
+    // Ensure savedRecipes is always an array
+    const savedRecipes = user.savedRecipes || [];
+    res.json(savedRecipes);
   } catch (error) {
     console.error('Error fetching saved recipes:', error);
-    res.status(500).json({ message: 'Error fetching saved recipes' });
+    res.status(500).json({ message: 'Error fetching saved recipes', error: error.message });
   }
 });
 
@@ -297,6 +311,115 @@ router.post('/:id/save', async (req, res) => {
   } catch (error) {
     console.error('Error saving/unsaving recipe:', error);
     res.status(500).json({ message: 'Error saving recipe' });
+  }
+});
+
+// Get popular recipes (most liked)
+router.get('/popular', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    
+    const recipes = await Recipe.aggregate([
+      { $match: { isPublic: true } },
+      {
+        $addFields: {
+          likesCount: { $size: "$likes" }
+        }
+      },
+      { $sort: { likesCount: -1, createdAt: -1 } },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'author',
+          foreignField: '_id',
+          as: 'author',
+          pipeline: [
+            { $project: { username: 1, fullName: 1, profilePicture: 1 } }
+          ]
+        }
+      },
+      { $unwind: '$author' }
+    ]);
+    
+    res.json(recipes);
+  } catch (error) {
+    console.error('Error fetching popular recipes:', error);
+    res.status(500).json({ message: 'Error fetching popular recipes' });
+  }
+});
+
+// Get recommended recipes based on user's liked categories and followed users
+router.get('/recommendations', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const userId = req.user._id;
+    
+    // Get user's profile to understand preferences
+    const user = await User.findById(userId).populate('likedRecipes following');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Get categories from liked recipes
+    const likedCategories = user.likedRecipes 
+      ? [...new Set(user.likedRecipes.map(recipe => recipe.category))]
+      : [];
+    
+    // Get recipes from followed users
+    const followingIds = user.following ? user.following.map(f => f._id) : [];
+    
+    // Build recommendation query
+    const recommendationQuery = {
+      isPublic: true,
+      _id: { $nin: user.likedRecipes ? user.likedRecipes.map(r => r._id) : [] }
+    };
+    
+    // Add category or author preference
+    if (likedCategories.length > 0 || followingIds.length > 0) {
+      recommendationQuery.$or = [];
+      
+      if (likedCategories.length > 0) {
+        recommendationQuery.$or.push({ category: { $in: likedCategories } });
+      }
+      
+      if (followingIds.length > 0) {
+        recommendationQuery.$or.push({ author: { $in: followingIds } });
+      }
+    }
+    
+    const recommendations = await Recipe.find(recommendationQuery)
+      .populate('author', 'username fullName profilePicture')
+      .populate('likes.user', 'username fullName')
+      .populate('comments.user', 'username fullName profilePicture')
+      .sort({ createdAt: -1, 'likes.length': -1 })
+      .limit(limit);
+    
+    // If we don't have enough recommendations, fill with trending recipes
+    if (recommendations.length < limit) {
+      const additionalRecipes = await Recipe.find({
+        isPublic: true,
+        _id: { 
+          $nin: [
+            ...recommendations.map(r => r._id),
+            ...(user.likedRecipes ? user.likedRecipes.map(r => r._id) : [])
+          ]
+        }
+      })
+      .populate('author', 'username fullName profilePicture')
+      .populate('likes.user', 'username fullName')
+      .populate('comments.user', 'username fullName profilePicture')
+      .sort({ createdAt: -1 })
+      .limit(limit - recommendations.length);
+      
+      recommendations.push(...additionalRecipes);
+    }
+    
+    res.json(recommendations);
+  } catch (error) {
+    console.error('Error fetching recommendations:', error);
+    res.status(500).json({ message: 'Error fetching recommendations' });
   }
 });
 

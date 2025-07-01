@@ -3,6 +3,7 @@ import { Heart, MessageCircle, Share, Bookmark, MoreHorizontal, User, Clock, Use
 import { useAuth } from '../context/AuthContext';
 import { Stories } from './Stories';
 import { StoryRing } from './StoryRing';
+import { CreateStory } from './CreateStory';
 
 interface Recipe {
   _id: string;
@@ -73,12 +74,32 @@ interface UserStats {
   followersCount: number;
 }
 
+interface Follower {
+  _id: string;
+  username: string;
+  fullName: string;
+  profilePicture?: string;
+  followedAt: string;
+}
+
+interface PopularRecipe {
+  _id: string;
+  title: string;
+  author: {
+    username: string;
+    fullName: string;
+  };
+  likes: Array<{ user: string }>;
+  category: string;
+}
+
 export const Feed: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({});
   const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
   const [showStories, setShowStories] = useState(false);
+  const [showCreateStory, setShowCreateStory] = useState(false);
   const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
   const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>([]);
   const [userStats, setUserStats] = useState<UserStats>({
@@ -88,6 +109,17 @@ export const Feed: React.FC = () => {
   });
   const [showShareModal, setShowShareModal] = useState<string | null>(null);
   const [savedRecipes, setSavedRecipes] = useState<Set<string>>(new Set());
+  
+  // Sidebar navigation state
+  const [rightSidebarView, setRightSidebarView] = useState<'suggestions' | 'popular' | 'recommendations'>('suggestions');
+  
+  // Data for sidebar views
+  const [likedRecipesList, setLikedRecipesList] = useState<Recipe[]>([]);
+  const [savedRecipesList, setSavedRecipesList] = useState<Recipe[]>([]);
+  const [followersList, setFollowersList] = useState<Follower[]>([]);
+  const [popularRecipes, setPopularRecipes] = useState<PopularRecipe[]>([]);
+  const [recommendations, setRecommendations] = useState<Recipe[]>([]);
+  const [sidebarLoading, setSidebarLoading] = useState(false);
   
   const { user } = useAuth();
 
@@ -249,6 +281,122 @@ export const Feed: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching saved recipes:', error);
+    }
+  };
+
+  // Sidebar data fetching functions
+  const fetchLikedRecipes = async () => {
+    setSidebarLoading(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/recipes/liked', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setLikedRecipesList(data);
+      }
+    } catch (error) {
+      console.error('Error fetching liked recipes:', error);
+    } finally {
+      setSidebarLoading(false);
+    }
+  };
+
+  const fetchSavedRecipesList = async () => {
+    setSidebarLoading(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/recipes/saved', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSavedRecipesList(data);
+      }
+    } catch (error) {
+      console.error('Error fetching saved recipes list:', error);
+    } finally {
+      setSidebarLoading(false);
+    }
+  };
+
+  const fetchFollowersList = async () => {
+    setSidebarLoading(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/users/followers-list', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setFollowersList(data);
+      }
+    } catch (error) {
+      console.error('Error fetching followers list:', error);
+    } finally {
+      setSidebarLoading(false);
+    }
+  };
+
+  const fetchPopularRecipes = async () => {
+    setSidebarLoading(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/recipes/popular', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setPopularRecipes(data);
+      }
+    } catch (error) {
+      console.error('Error fetching popular recipes:', error);
+    } finally {
+      setSidebarLoading(false);
+    }
+  };
+
+  const fetchRecommendations = async () => {
+    setSidebarLoading(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/recipes/recommendations', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setRecommendations(data);
+      }
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+    } finally {
+      setSidebarLoading(false);
+    }
+  };
+
+  const handleRightSidebarAction = (action: 'suggestions' | 'popular' | 'recommendations') => {
+    setRightSidebarView(action);
+    
+    switch (action) {
+      case 'popular':
+        fetchPopularRecipes();
+        break;
+      case 'recommendations':
+        fetchRecommendations();
+        break;
+      default:
+        break;
     }
   };
 
@@ -434,9 +582,9 @@ export const Feed: React.FC = () => {
       <div className="max-w-7xl mx-auto flex gap-6 p-4 pb-20 md:pb-4">
         {/* Left Sidebar */}
         <div className="hidden lg:block w-64 space-y-6">
-          {/* Your Stats */}
+          {/* Your Stats Section */}
           <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-white mb-4">Your Stats</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">📊 Your Stats</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-blue-200">Recipes Posted</span>
@@ -452,33 +600,184 @@ export const Feed: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Liked Recipes Section */}
+          <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">💖 Liked Recipes</h3>
+              <button
+                onClick={fetchLikedRecipes}
+                disabled={sidebarLoading}
+                className="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {sidebarLoading ? 'Loading...' : 'Load'}
+              </button>
+            </div>
+            
+            <div className="space-y-3 max-h-48 overflow-y-auto">
+              {sidebarLoading ? (
+                <div className="space-y-3">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="h-4 bg-slate-700 rounded mb-2"></div>
+                      <div className="h-3 bg-slate-700 rounded w-2/3"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : likedRecipesList.length === 0 ? (
+                <div className="text-center py-6">
+                  <Heart className="w-10 h-10 text-blue-300 mx-auto mb-2" />
+                  <p className="text-blue-200 text-sm">No liked recipes yet</p>
+                </div>
+              ) : (
+                likedRecipesList.slice(0, 3).map((recipe) => (
+                  <div key={recipe._id} className="p-3 bg-slate-800/50 rounded-lg">
+                    <h4 className="text-white font-medium text-sm truncate">{recipe.title}</h4>
+                    <p className="text-blue-300 text-xs">by {recipe.author.fullName}</p>
+                    <div className="flex items-center mt-1 text-xs text-blue-400">
+                      <Heart className="w-3 h-3 mr-1" />
+                      {recipe.likes.length} likes
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Saved Recipes Section */}
+          <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">🔖 Saved Recipes</h3>
+              <button
+                onClick={fetchSavedRecipesList}
+                disabled={sidebarLoading}
+                className="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {sidebarLoading ? 'Loading...' : 'Load'}
+              </button>
+            </div>
+            
+            <div className="space-y-3 max-h-48 overflow-y-auto">
+              {sidebarLoading ? (
+                <div className="space-y-3">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="h-4 bg-slate-700 rounded mb-2"></div>
+                      <div className="h-3 bg-slate-700 rounded w-2/3"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : savedRecipesList.length === 0 ? (
+                <div className="text-center py-6">
+                  <Bookmark className="w-10 h-10 text-blue-300 mx-auto mb-2" />
+                  <p className="text-blue-200 text-sm">No saved recipes yet</p>
+                </div>
+              ) : (
+                savedRecipesList.slice(0, 3).map((recipe) => (
+                  <div key={recipe._id} className="p-3 bg-slate-800/50 rounded-lg">
+                    <h4 className="text-white font-medium text-sm truncate">{recipe.title}</h4>
+                    <p className="text-blue-300 text-xs">by {recipe.author.fullName}</p>
+                    <div className="flex items-center mt-1 text-xs text-blue-400">
+                      <Clock className="w-3 h-3 mr-1" />
+                      {recipe.cookingTime} mins
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* My Followers Section */}
+          <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">👥 My Followers</h3>
+              <button
+                onClick={fetchFollowersList}
+                disabled={sidebarLoading}
+                className="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {sidebarLoading ? 'Loading...' : 'Load'}
+              </button>
+            </div>
+            
+            <div className="space-y-3 max-h-48 overflow-y-auto">
+              {sidebarLoading ? (
+                <div className="space-y-3">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="animate-pulse flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-slate-700 rounded-full"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-slate-700 rounded mb-1"></div>
+                        <div className="h-3 bg-slate-700 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : followersList.length === 0 ? (
+                <div className="text-center py-6">
+                  <Users className="w-10 h-10 text-blue-300 mx-auto mb-2" />
+                  <p className="text-blue-200 text-sm">No followers yet</p>
+                </div>
+              ) : (
+                followersList.slice(0, 3).map((follower) => (
+                  <div key={follower._id} className="flex items-center space-x-3 p-3 bg-slate-800/50 rounded-lg">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full overflow-hidden flex-shrink-0">
+                      {follower.profilePicture ? (
+                        <img
+                          src={follower.profilePicture}
+                          alt={follower.fullName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <User className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium text-sm truncate">{follower.fullName}</p>
+                      <p className="text-blue-300 text-xs truncate">@{follower.username}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Main Feed */}
         <div className="flex-1 max-w-2xl mx-auto lg:mx-0">
           {/* Stories Section */}
-          {storyGroups.length > 0 && (
-            <div className="premium-bg-card rounded-2xl p-4 mb-6 premium-shadow backdrop-blur-xl">
-              <div className="flex items-center space-x-4 overflow-x-auto pb-2">
-                <button
-                  className="flex-shrink-0 flex flex-col items-center space-y-2"
-                >
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center border-2 border-dashed border-blue-400">
-                    <Plus className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="text-xs text-blue-200">Your Story</span>
-                </button>
-                {storyGroups.map((group) => (
-                  <StoryRing
-                    key={group.author._id}
-                    author={group.author}
-                    hasUnviewed={group.hasUnviewed}
-                    onClick={() => setShowStories(true)}
-                  />
-                ))}
-              </div>
+          <div className="premium-bg-card rounded-2xl p-4 mb-6 premium-shadow backdrop-blur-xl">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-white">Stories</h3>
+              <button
+                onClick={() => setShowCreateStory(true)}
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all font-medium"
+              >
+                Create Story
+              </button>
             </div>
-          )}
+            <div className="flex items-center space-x-4 overflow-x-auto pb-2">
+              <button
+                onClick={() => setShowCreateStory(true)}
+                className="flex-shrink-0 flex flex-col items-center space-y-2 hover:scale-105 transition-transform"
+              >
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center border-2 border-dashed border-blue-400 hover:border-blue-300">
+                  <Plus className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xs text-blue-200">Your Story</span>
+              </button>
+              {storyGroups.map((group) => (
+                <StoryRing
+                  key={group.author._id}
+                  author={group.author}
+                  hasUnviewed={group.hasUnviewed}
+                  onClick={() => setShowStories(true)}
+                />
+              ))}
+            </div>
+          </div>
 
           {/* Recipes */}
           {recipes.length === 0 ? (
@@ -666,48 +965,168 @@ export const Feed: React.FC = () => {
 
         {/* Right Sidebar */}
         <div className="hidden xl:block w-80 space-y-6">
-          {/* Suggested Friends */}
-          <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-white mb-4">Suggested Friends</h3>
-            <div className="space-y-4">
-              {suggestedUsers.length === 0 ? (
-                <div className="text-center py-4">
-                  <User className="w-12 h-12 text-blue-300 mx-auto mb-2" />
-                  <p className="text-blue-200 text-sm">No suggestions available</p>
-                </div>
-              ) : (
-                suggestedUsers.map((friend) => (
-                  <div key={friend.username} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full overflow-hidden">
-                        {friend.profilePicture ? (
-                          <img
-                            src={friend.profilePicture}
-                            alt={friend.fullName}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <User className="w-5 h-5 text-white" />
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-white font-medium text-sm">{friend.fullName}</p>
-                        <p className="text-blue-300 text-xs">{friend.recipeCount} recipes</p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => handleFollowUser(friend._id)}
-                      className="px-3 py-1 bg-gradient-to-r from-blue-600 to-blue-500 text-white text-xs rounded-full hover:from-blue-700 hover:to-blue-600 transition-all"
-                    >
-                      Follow
-                    </button>
-                  </div>
-                ))
-              )}
+          {/* Navigation Tabs */}
+          <div className="premium-bg-card rounded-2xl p-4 premium-shadow backdrop-blur-xl">
+            <div className="flex space-x-1 bg-slate-800/50 rounded-lg p-1">
+              <button
+                onClick={() => handleRightSidebarAction('suggestions')}
+                className={`flex-1 px-3 py-2 text-xs font-medium rounded-md transition-colors ${
+                  rightSidebarView === 'suggestions'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-blue-300 hover:text-white hover:bg-slate-700/50'
+                }`}
+              >
+                Friends
+              </button>
+              <button
+                onClick={() => handleRightSidebarAction('popular')}
+                className={`flex-1 px-3 py-2 text-xs font-medium rounded-md transition-colors ${
+                  rightSidebarView === 'popular'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-blue-300 hover:text-white hover:bg-slate-700/50'
+                }`}
+              >
+                Popular
+              </button>
+              <button
+                onClick={() => handleRightSidebarAction('recommendations')}
+                className={`flex-1 px-3 py-2 text-xs font-medium rounded-md transition-colors ${
+                  rightSidebarView === 'recommendations'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-blue-300 hover:text-white hover:bg-slate-700/50'
+                }`}
+              >
+                For You
+              </button>
             </div>
           </div>
+
+          {/* Right Sidebar Content */}
+          {rightSidebarView === 'suggestions' && (
+            <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
+              <h3 className="text-lg font-semibold text-white mb-4">Suggested Friends</h3>
+              <div className="space-y-4">
+                {suggestedUsers.length === 0 ? (
+                  <div className="text-center py-4">
+                    <User className="w-12 h-12 text-blue-300 mx-auto mb-2" />
+                    <p className="text-blue-200 text-sm">No suggestions available</p>
+                  </div>
+                ) : (
+                  suggestedUsers.map((friend) => (
+                    <div key={friend.username} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full overflow-hidden">
+                          {friend.profilePicture ? (
+                            <img
+                              src={friend.profilePicture}
+                              alt={friend.fullName}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <User className="w-5 h-5 text-white" />
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-white font-medium text-sm">{friend.fullName}</p>
+                          <p className="text-blue-300 text-xs">{friend.recipeCount} recipes</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => handleFollowUser(friend._id)}
+                        className="px-3 py-1 bg-gradient-to-r from-blue-600 to-blue-500 text-white text-xs rounded-full hover:from-blue-700 hover:to-blue-600 transition-all"
+                      >
+                        Follow
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {rightSidebarView === 'popular' && (
+            <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
+              <h3 className="text-lg font-semibold text-white mb-4">🔥 Popular Recipes</h3>
+              {sidebarLoading ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="h-4 bg-slate-700 rounded mb-2"></div>
+                      <div className="h-3 bg-slate-700 rounded w-3/4"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {popularRecipes.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Trophy className="w-12 h-12 text-orange-400 mx-auto mb-2" />
+                      <p className="text-blue-200 text-sm">No popular recipes yet</p>
+                    </div>
+                  ) : (
+                    popularRecipes.map((recipe) => (
+                      <div key={recipe._id} className="p-3 bg-slate-800/50 rounded-lg">
+                        <h4 className="text-white font-medium text-sm">{recipe.title}</h4>
+                        <p className="text-blue-300 text-xs">by {recipe.author.fullName}</p>
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center text-xs text-orange-400">
+                            <Heart className="w-3 h-3 mr-1 fill-current" />
+                            {recipe.likes?.length || 0} likes
+                          </div>
+                          <span className="px-2 py-1 bg-orange-500/20 text-orange-300 rounded text-xs">
+                            {recipe.category}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {rightSidebarView === 'recommendations' && (
+            <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
+              <h3 className="text-lg font-semibold text-white mb-4">✨ For You</h3>
+              {sidebarLoading ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="h-4 bg-slate-700 rounded mb-2"></div>
+                      <div className="h-3 bg-slate-700 rounded w-3/4"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {recommendations.length === 0 ? (
+                    <div className="text-center py-8">
+                      <MessageCircle className="w-12 h-12 text-purple-400 mx-auto mb-2" />
+                      <p className="text-blue-200 text-sm">Like more recipes to get personalized recommendations</p>
+                    </div>
+                  ) : (
+                    recommendations.map((recipe) => (
+                      <div key={recipe._id} className="p-3 bg-slate-800/50 rounded-lg">
+                        <h4 className="text-white font-medium text-sm">{recipe.title}</h4>
+                        <p className="text-blue-300 text-xs">by {recipe.author.fullName}</p>
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center text-xs text-purple-400">
+                            <Heart className="w-3 h-3 mr-1" />
+                            {recipe.likes?.length || 0} likes
+                          </div>
+                          <span className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded text-xs">
+                            {recipe.category}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Weekly Challenge */}
           <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
@@ -749,6 +1168,25 @@ export const Feed: React.FC = () => {
           onClose={() => setShowStories(false)}
         />
       )}
+
+      {/* Create Story Modal */}
+      {showCreateStory && (
+        <CreateStory
+          onClose={() => setShowCreateStory(false)}
+          onStoryCreated={() => {
+            setShowCreateStory(false);
+            fetchStories(); // Refresh stories after creating
+          }}
+        />
+      )}
+
+      {/* Floating Story Button (Mobile) */}
+      <button
+        onClick={() => setShowCreateStory(true)}
+        className="lg:hidden fixed bottom-20 right-4 z-10 w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg hover:scale-110 transition-all flex items-center justify-center"
+      >
+        <Plus className="w-6 h-6" />
+      </button>
     </div>
   );
 };
