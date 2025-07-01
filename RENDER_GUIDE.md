@@ -20,11 +20,19 @@
 
 ### **Step 1: Prepare Your Repository**
 ```bash
+# Build the frontend locally to test (creates dist/ folder)
+npm run build
+
 # Make sure all files are committed
 git add .
 git commit -m "Prepare for Render deployment"
 git push origin main
 ```
+
+**🚨 IMPORTANT:** The `dist/` folder is created by running `npm run build`. If you don't see it:
+1. Run `build-frontend.bat` to build and troubleshoot
+2. Or manually run `npm run build` 
+3. The `dist/` folder should appear after successful build
 
 ### **Step 2: Deploy Backend Service**
 1. Go to [Render Dashboard](https://dashboard.render.com)
@@ -81,11 +89,23 @@ git push origin main
 
 ## 🔍 **TROUBLESHOOTING:**
 
+### **❌ "dist/ folder not found":**
+The `dist/` folder is created when you build the frontend:
+```bash
+# Run this locally to create dist/ folder
+npm run build
+
+# Or use the helper script
+build-frontend.bat
+```
+**Note:** You don't need to commit the `dist/` folder. Render will create it during deployment.
+
 ### **Common Issues:**
 1. **Build Fails**: Check Node.js version compatibility
 2. **CORS Errors**: Ensure CLIENT_URL is set correctly
 3. **Database Connection**: Verify MONGODB_URI is correct
 4. **API Not Found**: Check VITE_API_URL points to backend
+5. **TypeScript Errors**: Fix any TS compilation errors before building
 
 ### **Render-Specific Notes:**
 - ✅ Free tier services sleep after 15 minutes of inactivity
