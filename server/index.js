@@ -45,16 +45,37 @@ if (!fs.existsSync(uploadsDir)) {
   console.log('📁 Created uploads directory');
 }
 
+// Get network IP for CORS
+import { networkInterfaces } from 'os';
+
+const getNetworkIPs = () => {
+  const nets = networkInterfaces();
+  const results = [];
+  
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        results.push(`http://${net.address}:4173`);
+        results.push(`http://${net.address}:5173`);
+      }
+    }
+  }
+  return results;
+};
+
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:5173",
+      "http://localhost:4173",
       "http://127.0.0.1:5173",
+      "http://127.0.0.1:4173",
       "https://6x56z9gt-5173.inc1.devtunnels.ms",
       /^https:\/\/.*\.inc1\.devtunnels\.ms$/,
-      process.env.CLIENT_URL
+      process.env.CLIENT_URL,
+      ...getNetworkIPs()
     ].filter(Boolean), // Remove any undefined values
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true
@@ -65,10 +86,13 @@ const io = new Server(server, {
 app.use(cors({
   origin: [
     "http://localhost:5173",
+    "http://localhost:4173",
     "http://127.0.0.1:5173", 
+    "http://127.0.0.1:4173",
     "https://6x56z9gt-5173.inc1.devtunnels.ms",
     /^https:\/\/.*\.inc1\.devtunnels\.ms$/,
-    process.env.CLIENT_URL
+    process.env.CLIENT_URL,
+    ...getNetworkIPs()
   ].filter(Boolean),
   credentials: true
 }));
@@ -103,6 +127,24 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Root endpoint for easy testing
+app.get('/', (req, res) => {
+  res.json({
+    message: 'RecipeShare API Server',
+    status: 'Running',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth/*',
+      users: '/api/users/*',
+      recipes: '/api/recipes/*',
+      stories: '/api/stories/*',
+      challenges: '/api/challenges/*'
+    },
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -159,7 +201,7 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-const HOST = process.env.HOST || '0.0.0.0'; // Allow override for network access
+const HOST = (process.env.HOST || '0.0.0.0').trim(); // Allow override for network access, trim whitespace
 
 server.listen(PORT, HOST, () => {
   console.log(`🚀 Server running on ${HOST}:${PORT}`);

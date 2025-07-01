@@ -14,6 +14,8 @@
     "diagnostic": "node server/diagnostic.js",
     "debug-server": "node debug-server.js",
     "network-test": "node ultimate-network-diagnostic.js",
+    "serve-network": "node serve-network.js",
+    "start-network": "concurrently \"npm run server\" \"npm run serve-network\"",
     "seed:challenges": "node server/seeds/seedChallenges.js",
     "build": "vite build",
     "lint": "eslint .",
