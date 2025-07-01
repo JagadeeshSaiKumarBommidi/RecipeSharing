@@ -49,14 +49,27 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    methods: ["GET", "POST"]
+    origin: [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "https://6x56z9gt-5173.inc1.devtunnels.ms",
+      /^https:\/\/.*\.inc1\.devtunnels\.ms$/,
+      process.env.CLIENT_URL
+    ].filter(Boolean), // Remove any undefined values
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true
   }
 });
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  origin: [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173", 
+    "https://6x56z9gt-5173.inc1.devtunnels.ms",
+    /^https:\/\/.*\.inc1\.devtunnels\.ms$/,
+    process.env.CLIENT_URL
+  ].filter(Boolean),
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
@@ -157,6 +170,20 @@ server.listen(PORT, HOST, () => {
   if (HOST === '0.0.0.0') {
     console.log('🌐 Server accessible from network');
     console.log('💡 Other systems can access via your IP address');
+    
+    // Show available network interfaces
+    import('os').then(os => {
+      const interfaces = os.networkInterfaces();
+      console.log('📡 Available network addresses:');
+      Object.keys(interfaces).forEach(name => {
+        interfaces[name].forEach(iface => {
+          if (iface.family === 'IPv4' && !iface.internal) {
+            console.log(`   - http://${iface.address}:${PORT} (${name})`);
+          }
+        });
+      });
+      console.log('🔧 Health check: Add /api/health to any URL above');
+    });
   } else {
     console.log('🔒 Server only accessible from localhost');
     console.log('💡 Set HOST=0.0.0.0 for network access');

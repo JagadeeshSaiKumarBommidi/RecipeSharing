@@ -1,6 +1,15 @@
 // API Configuration
+// Dev tunnel support: Use environment variable or fallback to localhost
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+
+// Debug logging in development
+if (import.meta.env.DEV) {
+  console.log('🔧 API Configuration:');
+  console.log('- API_BASE_URL:', API_BASE_URL);
+  console.log('- SOCKET_URL:', SOCKET_URL);
+  console.log('- Current URL:', window.location.href);
+}
 
 // API endpoints
 export const API_ENDPOINTS = {

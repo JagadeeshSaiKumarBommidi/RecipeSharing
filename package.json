@@ -12,6 +12,8 @@
     "server:debug": "node --inspect server/index.js",
     "test-api": "node server/test-api.js",
     "diagnostic": "node server/diagnostic.js",
+    "debug-server": "node debug-server.js",
+    "network-test": "node ultimate-network-diagnostic.js",
     "seed:challenges": "node server/seeds/seedChallenges.js",
     "build": "vite build",
     "lint": "eslint .",
