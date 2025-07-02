@@ -1,0 +1,37 @@
+🔧 Vercel Environment Variables Setup Guide
+============================================
+
+After deploying to Vercel, add these environment variables in your dashboard:
+
+📍 Go to: https://vercel.com/dashboard → Your Project → Settings → Environment Variables
+
+Add these variables:
+
+1. MONGODB_URI
+   Value: mongodb+srv://username:password@cluster.mongodb.net/recipesharing
+   (Replace with your actual MongoDB connection string)
+
+2. JWT_SECRET  
+   Value: your-super-secret-jwt-key-12345
+   (Use a long, random, secure string)
+
+3. CLIENT_URL
+   Value: https://your-app-name.vercel.app
+   (Replace with your actual Vercel URL after deployment)
+
+4. NODE_ENV
+   Value: production
+
+🔄 After adding variables:
+- Go to Deployments tab
+- Click the three dots (⋯) on latest deployment  
+- Click "Redeploy"
+- Wait for redeployment to complete
+
+✅ Your app will then be fully functional with:
+- Database connection working
+- Authentication working  
+- All features enabled
+- Global access from any device
+
+🌍 Share your app URL with anyone - they can access it worldwide!
