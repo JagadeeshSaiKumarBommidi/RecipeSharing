@@ -32,10 +32,5 @@
     "JWT_SECRET": "@jwt_secret",
     "CLIENT_URL": "@client_url",
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "backend/server/index.js": {
-      "maxDuration": 30
-    }
   }
 }
