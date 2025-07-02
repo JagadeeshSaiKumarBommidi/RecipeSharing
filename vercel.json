@@ -19,12 +19,23 @@
       "dest": "backend/server/index.js"
     },
     {
-      "src": "/(.*)",
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
       "dest": "/frontend/dist/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/dist/index.html"
     }
   ],
   "env": {
     "MONGODB_URI": "@mongodb_uri",
-    "JWT_SECRET": "@jwt_secret"
+    "JWT_SECRET": "@jwt_secret",
+    "CLIENT_URL": "@client_url",
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "backend/server/index.js": {
+      "maxDuration": 30
+    }
   }
 }
