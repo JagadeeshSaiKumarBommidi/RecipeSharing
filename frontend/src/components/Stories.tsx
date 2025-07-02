@@ -64,6 +64,19 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
 
   const fonts = ['Arial', 'Georgia', 'Times New Roman', 'Courier New', 'Verdana'];
 
+  const handleNext = React.useCallback(() => {
+    const currentGroup = storyGroups[currentGroupIndex];
+    if (currentStoryIndex < currentGroup.stories.length - 1) {
+      setCurrentStoryIndex(prev => prev + 1);
+    } else if (currentGroupIndex < storyGroups.length - 1) {
+      setCurrentGroupIndex(prev => prev + 1);
+      setCurrentStoryIndex(0);
+    } else {
+      // End of all stories
+      onClose?.();
+    }
+  }, [currentGroupIndex, currentStoryIndex, storyGroups, onClose]);
+
   useEffect(() => {
     fetchStories();
   }, []);
@@ -76,7 +89,7 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
 
       return () => clearTimeout(timer);
     }
-  }, [currentGroupIndex, currentStoryIndex, storyGroups]);
+  }, [currentGroupIndex, currentStoryIndex, storyGroups, handleNext]);
 
   const fetchStories = async () => {
     try {
@@ -94,19 +107,6 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
       console.error('Error fetching stories:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleNext = () => {
-    const currentGroup = storyGroups[currentGroupIndex];
-    if (currentStoryIndex < currentGroup.stories.length - 1) {
-      setCurrentStoryIndex(prev => prev + 1);
-    } else if (currentGroupIndex < storyGroups.length - 1) {
-      setCurrentGroupIndex(prev => prev + 1);
-      setCurrentStoryIndex(0);
-    } else {
-      // End of all stories
-      onClose?.();
     }
   };
 
