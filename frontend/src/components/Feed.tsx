@@ -588,16 +588,16 @@ export const Feed: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="max-w-7xl mx-auto flex gap-6 p-4 pb-20 md:pb-4">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto flex gap-4 lg:gap-6 p-4 pb-20 md:pb-6">
         {/* Left Sidebar */}
         <div className="hidden lg:block w-64 space-y-6">
           {/* Your Stats Section */}
-          <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
-            <h3 className="text-lg font-semibold text-white mb-4">📊 Your Stats</h3>
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Your Stats</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-blue-200">Recipes Posted</span>
+                <span className="text-gray-600">Recipes Posted</span>
                 <span className="text-white font-semibold">{userStats.recipesPosted}</span>
               </div>
               <div className="flex justify-between items-center">

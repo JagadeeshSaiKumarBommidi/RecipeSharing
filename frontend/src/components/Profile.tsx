@@ -90,15 +90,17 @@ export const Profile: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="bg-white rounded-2xl shadow-sm animate-pulse">
-          <div className="h-48 bg-gray-300 rounded-t-2xl"></div>
-          <div className="p-6">
-            <div className="flex items-center space-x-4 mb-6">
-              <div className="w-24 h-24 bg-gray-300 rounded-full"></div>
-              <div className="flex-1">
-                <div className="h-6 bg-gray-300 rounded w-1/3 mb-2"></div>
-                <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+      <div className="min-h-screen bg-gray-50 pb-20 md:pb-6">
+        <div className="max-w-4xl mx-auto p-4 sm:p-6">
+          <div className="bg-white rounded-2xl shadow-sm animate-pulse">
+            <div className="h-32 sm:h-48 bg-gray-300 rounded-t-2xl"></div>
+            <div className="p-4 sm:p-6">
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-300 rounded-full"></div>
+                <div className="flex-1">
+                  <div className="h-5 sm:h-6 bg-gray-300 rounded w-1/3 mb-2"></div>
+                  <div className="h-3 sm:h-4 bg-gray-300 rounded w-1/4"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -106,47 +108,47 @@ export const Profile: React.FC = () => {
       </div>
     );
   }
-
   if (!profile) return null;
 
   return (
-    <div className="max-w-4xl mx-auto p-4 pb-20 md:pb-4">
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        {/* Cover Photo */}
-        <div className="h-48 bg-gradient-to-br from-orange-600 to-red-600 relative">
-          <div className="absolute inset-0 bg-black/20"></div>
-        </div>
+    <div className="min-h-screen bg-gray-50 pb-20 md:pb-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6">
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          {/* Cover Photo */}
+          <div className="h-32 sm:h-48 bg-gradient-to-r from-orange-500 to-red-500 relative">
+            <div className="absolute inset-0 bg-black/20"></div>
+          </div>
 
-        {/* Profile Info */}
-        <div className="px-6 pb-6">
-          <div className="flex flex-col items-center text-center -mt-12 relative">
-            {/* Profile Picture */}
-            <div className="relative mb-6">
-              <div className="w-32 h-32 bg-white rounded-full p-1 shadow-lg overflow-hidden">
-                {(isEditing ? editData.profilePicture : profile.profilePicture) ? (
-                  <img
-                    src={isEditing ? editData.profilePicture : profile.profilePicture}
-                    alt={profile.fullName}
-                    className="w-full h-full object-cover rounded-full"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-full">
-                    <User className="w-16 h-16 text-gray-400" />
-                  </div>
+          {/* Profile Info */}
+          <div className="px-4 sm:px-6 pb-6">
+            <div className="flex flex-col items-center text-center -mt-16 sm:-mt-12 relative">
+              {/* Profile Picture */}
+              <div className="relative mb-4 sm:mb-6">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-full p-1 shadow-lg overflow-hidden">
+                  {(isEditing ? editData.profilePicture : profile.profilePicture) ? (
+                    <img
+                      src={isEditing ? editData.profilePicture : profile.profilePicture}
+                      alt={profile.fullName}
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-full">
+                      <User className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                {isEditing && (
+                  <label className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 bg-orange-500 text-white p-1.5 sm:p-2 rounded-full cursor-pointer hover:bg-orange-600 transition-colors shadow-lg">
+                    <Camera className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
                 )}
               </div>
-              {isEditing && (
-                <label className="absolute bottom-2 right-2 bg-orange-600 text-white p-2 rounded-full cursor-pointer hover:bg-orange-700 transition-colors shadow-lg">
-                  <Camera className="w-4 h-4" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </label>
-              )}
-            </div>
 
             {/* User Info */}
             <div className="w-full max-w-md">
@@ -274,6 +276,7 @@ export const Profile: React.FC = () => {
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   );
