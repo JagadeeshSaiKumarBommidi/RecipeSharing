@@ -24,7 +24,7 @@ call npm run build
 
 echo.
 echo 🚀 Starting backend server with network binding...
-start /B cmd /C "set HOST=0.0.0.0&& set PORT=5000&& npm run server"
+start /B cmd /C "cd backend && set HOST=0.0.0.0 && npm start"
 echo ⏳ Waiting for backend to start...
 timeout /t 8 /nobreak >nul
 
@@ -59,4 +59,4 @@ echo 4. Frontend should load the full app
 echo.
 
 echo ⏳ Starting frontend server...
-npx vite preview --host 0.0.0.0 --port 4173
+cd frontend && npx vite preview --host 0.0.0.0 --port 4173
