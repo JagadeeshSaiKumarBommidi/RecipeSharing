@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Users, MessageCircle, User, Plus, Search, Bell, Menu, Gamepad2, ShoppingCart } from 'lucide-react';
+import { Home, Users, MessageCircle, User, Plus, Search, Bell, Gamepad2, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Feed } from './Feed';
 import { Profile } from './Profile';
@@ -16,10 +16,10 @@ export const MainApp: React.FC = () => {
   const { user, logout } = useAuth();
 
   const tabs = [
-    { id: 'feed', label: 'Feed', icon: Home },
-    { id: 'friends', label: 'Friends', icon: Users },
-    { id: 'games', label: 'Games', icon: Gamepad2 },
-    { id: 'shopping', label: 'Shopping', icon: ShoppingCart },
+    { id: 'feed', label: 'Home', icon: Home },
+    { id: 'friends', label: 'Search', icon: Users },
+    { id: 'games', label: 'Reels', icon: Gamepad2 },
+    { id: 'shopping', label: 'Shop', icon: ShoppingCart },
     { id: 'chat', label: 'Messages', icon: MessageCircle },
     { id: 'profile', label: 'Profile', icon: User }
   ];
@@ -45,65 +45,70 @@ export const MainApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Modern Header with consistent design */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+      {/* Instagram-style Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="flex justify-between items-center h-14 sm:h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <div className="flex-shrink-0 flex items-center">
-                <div className="p-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl shadow-lg">
-                  <Home className="w-6 h-6 text-white" />
-                </div>
-                <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                  RecipeShare
-                </span>
-              </div>
+              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 bg-clip-text text-transparent">
+                RecipeShare
+              </h1>
             </div>
 
-            {/* Search Bar */}
-            <div className="hidden lg:block flex-1 max-w-xl mx-8">
+            {/* Search Bar - Instagram style */}
+            <div className="hidden md:block flex-1 max-w-xs mx-8">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
-                  placeholder="Search recipes, users, or ingredients..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-700 placeholder-gray-500 transition-all"
+                  placeholder="Search"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-100 border-0 rounded-lg focus:ring-1 focus:ring-gray-300 focus:bg-white text-gray-900 placeholder-gray-500 text-sm transition-all"
                 />
               </div>
             </div>
 
-            {/* Right Side */}
-            <div className="flex items-center space-x-3">
-              {/* Mobile Search Toggle */}
-              <button className="lg:hidden p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all">
-                <Search className="w-5 h-5" />
+            {/* Right Side Icons */}
+            <div className="flex items-center space-x-4 sm:space-x-6">
+              {/* Home Icon (Desktop) */}
+              <button 
+                onClick={() => setActiveTab('feed')}
+                className="hidden md:block p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Home className={`w-6 h-6 ${activeTab === 'feed' ? 'text-black' : 'text-gray-700'}`} />
               </button>
 
-              {/* Create Recipe Button */}
+              {/* Messages Icon (Desktop) */}
+              <button 
+                onClick={() => setActiveTab('chat')}
+                className="hidden md:block p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <MessageCircle className={`w-6 h-6 ${activeTab === 'chat' ? 'text-black' : 'text-gray-700'}`} />
+              </button>
+
+              {/* Create Post Button */}
               <button
                 onClick={() => setShowCreateRecipe(true)}
-                className="hidden sm:inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl hover:from-orange-600 hover:to-red-600 transition-all font-medium shadow-lg hover:shadow-xl"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <Plus className="w-5 h-5 mr-2" />
-                <span className="hidden md:inline">Create</span>
+                <Plus className="w-6 h-6 text-gray-700" />
               </button>
 
               {/* Notifications */}
-              <button className="relative p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all">
-                <Bell className="w-6 h-6" />
+              <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <Bell className="w-6 h-6 text-gray-700" />
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
                   3
                 </span>
               </button>
 
-              {/* Profile Menu */}
+              {/* Profile Picture */}
               <div className="relative">
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="flex items-center space-x-2 p-1.5 hover:bg-gray-50 rounded-xl transition-all"
+                  className="flex items-center space-x-2"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-red-500 rounded-full overflow-hidden ring-2 ring-orange-200">
+                  <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-gray-300 transition-all">
                     {user?.profilePicture ? (
                       <img
                         src={user.profilePicture}
@@ -111,33 +116,39 @@ export const MainApp: React.FC = () => {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
+                      <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                         <User className="w-5 h-5 text-white" />
                       </div>
                     )}
                   </div>
-                  <span className="hidden sm:block font-medium text-gray-700 text-sm">{user?.fullName}</span>
-                  <Menu className="w-4 h-4 text-gray-600 lg:hidden" />
                 </button>
 
-                {/* Dropdown Menu */}
+                {/* Profile Dropdown */}
                 {mobileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                     <button
                       onClick={() => {
                         setActiveTab('profile');
                         setMobileMenuOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
                     >
-                      <User className="w-5 h-5 mr-3" />
-                      My Profile
+                      <User className="w-4 h-4 mr-3" />
+                      Profile
                     </button>
                     <button
-                      onClick={logout}
-                      className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 flex items-center transition-colors"
+                      onClick={() => setShowCreateRecipe(true)}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center md:hidden"
                     >
-                      Logout
+                      <Plus className="w-4 h-4 mr-3" />
+                      Create Post
+                    </button>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <button
+                      onClick={logout}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      Log Out
                     </button>
                   </div>
                 )}

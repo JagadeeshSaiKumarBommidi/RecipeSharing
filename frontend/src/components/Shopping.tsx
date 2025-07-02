@@ -247,8 +247,8 @@ export const Shopping: React.FC = () => {
   // Checkout Page
   if (showCheckout) {
     return (
-      <div className="max-w-4xl mx-auto p-4 pb-20 md:pb-4">
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+      <div className="max-w-4xl mx-auto p-3 pb-20 md:pb-4">
+        <div className="bg-white rounded-2xl shadow-sm p-3 sm:p-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900 flex items-center">
               <Truck className="w-7 h-7 mr-3 text-orange-600" />
@@ -271,31 +271,31 @@ export const Shopping: React.FC = () => {
           ) : (
             <div className="space-y-8">
               {/* Delivery Address Section */}
-              <div className="bg-gray-50 rounded-xl p-6">
+              <div className="bg-gray-50 rounded-xl p-3 sm:p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <MapPin className="w-5 h-5 mr-2 text-orange-600" />
                   Delivery Address
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                   <input
                     type="text"
                     placeholder="Full Name *"
                     value={deliveryAddress.fullName}
                     onChange={(e) => handleAddressChange('fullName', e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                   <input
                     type="tel"
                     placeholder="Phone Number *"
                     value={deliveryAddress.phoneNumber}
                     onChange={(e) => handleAddressChange('phoneNumber', e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                   <textarea
                     placeholder="Address *"
                     value={deliveryAddress.address}
                     onChange={(e) => handleAddressChange('address', e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent md:col-span-2"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent md:col-span-2"
                     rows={3}
                   />
                   <input
@@ -303,40 +303,40 @@ export const Shopping: React.FC = () => {
                     placeholder="City *"
                     value={deliveryAddress.city}
                     onChange={(e) => handleAddressChange('city', e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                   <input
                     type="text"
                     placeholder="State *"
                     value={deliveryAddress.state}
                     onChange={(e) => handleAddressChange('state', e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                   <input
                     type="text"
                     placeholder="Pincode *"
                     value={deliveryAddress.pincode}
                     onChange={(e) => handleAddressChange('pincode', e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                   <input
                     type="text"
                     placeholder="Landmark (Optional)"
                     value={deliveryAddress.landmark}
                     onChange={(e) => handleAddressChange('landmark', e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                 </div>
               </div>
 
               {/* Payment Method Section */}
-              <div className="bg-gray-50 rounded-xl p-6">
+              <div className="bg-gray-50 rounded-xl p-3 sm:p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <CreditCard className="w-5 h-5 mr-2 text-orange-600" />
                   Payment Method
                 </h2>
                 <div className="space-y-3">
-                  <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center p-2 sm:p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                     <input
                       type="radio"
                       name="payment"
@@ -353,7 +353,7 @@ export const Shopping: React.FC = () => {
                       </div>
                     </div>
                   </label>
-                  <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center p-2 sm:p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                     <input
                       type="radio"
                       name="payment"
@@ -370,7 +370,7 @@ export const Shopping: React.FC = () => {
                       </div>
                     </div>
                   </label>
-                  <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center p-2 sm:p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                     <input
                       type="radio"
                       name="payment"
@@ -387,7 +387,7 @@ export const Shopping: React.FC = () => {
                       </div>
                     </div>
                   </label>
-                  <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center p-2 sm:p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                     <input
                       type="radio"
                       name="payment"
@@ -408,7 +408,7 @@ export const Shopping: React.FC = () => {
               </div>
 
               {/* Order Summary */}
-              <div className="bg-gray-50 rounded-xl p-6">
+              <div className="bg-gray-50 rounded-xl p-3 sm:p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between">
@@ -443,8 +443,8 @@ export const Shopping: React.FC = () => {
   // Cart Page
   if (showCart) {
     return (
-      <div className="max-w-4xl mx-auto p-4 pb-20 md:pb-4">
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+      <div className="max-w-4xl mx-auto p-3 pb-20 md:pb-4">
+        <div className="bg-white rounded-2xl shadow-sm p-3 sm:p-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900 flex items-center">
               <ShoppingCart className="w-7 h-7 mr-3 text-orange-600" />
@@ -474,7 +474,7 @@ export const Shopping: React.FC = () => {
             <>
               <div className="space-y-4 mb-6">
                 {cart.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div key={item.id} className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl">
                     <div className="flex items-center space-x-4">
                       <span className="text-3xl">{item.image}</span>
                       <div>
@@ -533,7 +533,7 @@ export const Shopping: React.FC = () => {
 
   // Main Shopping Page
   return (
-    <div className="max-w-6xl mx-auto p-4 pb-20 md:pb-4">
+    <div className="max-w-6xl mx-auto p-3 pb-20 md:pb-4">
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -595,7 +595,7 @@ export const Shopping: React.FC = () => {
       </div>
 
       {/* Featured Deal */}
-      <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl p-6 mb-8 text-white">
+      <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl p-3 sm:p-6 mb-8 text-white">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold mb-2">🎉 Daily Deal</h2>
@@ -609,10 +609,10 @@ export const Shopping: React.FC = () => {
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredProducts.map((product) => (
           <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="p-6">
+            <div className="p-3 sm:p-6">
               <div className="flex items-start justify-between mb-4">
                 <span className="text-4xl">{product.image}</span>
                 {!product.inStock && (
