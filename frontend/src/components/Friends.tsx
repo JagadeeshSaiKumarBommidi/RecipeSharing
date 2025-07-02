@@ -32,13 +32,27 @@ export const Friends: React.FC = () => {
     fetchSuggestions();
   }, []);
 
+  const searchUsers = React.useCallback(async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.USERS.SEARCH(searchQuery), {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data);
+      }
+    } catch (error) {
+      console.error('Error searching users:', error);
+    }
+  }, [searchQuery]);
+
   useEffect(() => {
     if (searchQuery.length > 2) {
       searchUsers();
     } else {
       setSearchResults([]);
     }
-  }, [searchQuery]);
+  }, [searchQuery, searchUsers]);
 
   const fetchFriends = async () => {
     try {
@@ -84,19 +98,6 @@ export const Friends: React.FC = () => {
     }
   };
 
-  const searchUsers = async () => {
-    try {
-      const response = await fetch(API_ENDPOINTS.USERS.SEARCH(searchQuery), {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setSearchResults(data);
-      }
-    } catch (error) {
-      console.error('Error searching users:', error);
-    }
-  };
 
   const sendFriendRequest = async (userId: string) => {
     try {

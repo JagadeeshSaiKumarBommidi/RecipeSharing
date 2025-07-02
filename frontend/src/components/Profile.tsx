@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Edit3, Settings, Camera, MapPin, Calendar, Users, ChefHat } from 'lucide-react';
+import { User, Edit3, Settings, Camera, Calendar, ChefHat } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_ENDPOINTS } from '../config/api';
 
@@ -10,15 +10,15 @@ interface UserProfile {
   email: string;
   bio: string;
   profilePicture?: string;
-  friends: any[];
-  following: any[];
-  followers: any[];
-  recipes: any[];
+  friends: string[];
+  following: string[];
+  followers: string[];
+  recipes: string[];
   createdAt: string;
 }
 
 export const Profile: React.FC = () => {
-  const { user, updateUser } = useAuth();
+  const { updateUser } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -263,7 +263,7 @@ export const Profile: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {profile.recipes.map((recipe, index) => (
+            {profile.recipes.map((_, index) => (
               <div key={index} className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow">
                 <div className="aspect-square bg-gray-100 flex items-center justify-center">
                   <ChefHat className="w-12 h-12 text-gray-400" />
