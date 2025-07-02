@@ -1,18 +1,29 @@
 // API Configuration
-// Smart detection: Use production backend when deployed on Render
-const isProduction = window.location.hostname.includes('onrender.com');
-const API_BASE_URL = isProduction 
+// PRODUCTION FIX: Force production URLs when deployed
+const isRenderProduction = typeof window !== 'undefined' && window.location.hostname.includes('onrender.com');
+const isDevelopment = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+// Force production backend URL when on Render
+const API_BASE_URL = isRenderProduction 
   ? 'https://recipesharing-3.onrender.com'
-  : (import.meta.env.VITE_API_URL || 'http://localhost:5000');
-const SOCKET_URL = isProduction 
+  : isDevelopment 
+    ? (import.meta.env.VITE_API_URL || 'http://localhost:5000')
+    : 'https://recipesharing-3.onrender.com'; // Default to production
+
+const SOCKET_URL = isRenderProduction 
   ? 'https://recipesharing-3.onrender.com'
-  : (import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
+  : isDevelopment 
+    ? (import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000')
+    : 'https://recipesharing-3.onrender.com'; // Default to production
 
 // Debug logging in development and production
-console.log('🔧 API Configuration:');
+console.log('🔧 API Configuration (ENHANCED DEBUG):');
+console.log('- Current hostname:', typeof window !== 'undefined' ? window.location.hostname : 'SSR');
+console.log('- isRenderProduction:', isRenderProduction);
+console.log('- isDevelopment:', isDevelopment);
 console.log('- API_BASE_URL:', API_BASE_URL);
 console.log('- SOCKET_URL:', SOCKET_URL);
-console.log('- Current URL:', window.location.href);
+console.log('- Current URL:', typeof window !== 'undefined' ? window.location.href : 'SSR');
 console.log('- Environment:', import.meta.env.MODE);
 console.log('- VITE_API_URL from env:', import.meta.env.VITE_API_URL);
 console.log('- VITE_SOCKET_URL from env:', import.meta.env.VITE_SOCKET_URL);
