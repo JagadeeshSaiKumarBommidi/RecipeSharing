@@ -270,15 +270,24 @@ export const Feed: React.FC = () => {
 
   const fetchSavedRecipes = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found for fetching saved recipes');
+        return;
+      }
+
       const response = await fetch(API_ENDPOINTS.RECIPES.SAVED, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
       if (response.ok) {
         const data = await response.json();
         setSavedRecipes(new Set(data.map((recipe: Recipe) => recipe._id)));
+      } else {
+        const errorData = await response.json();
+        console.error('Error fetching saved recipes:', response.status, errorData);
       }
     } catch (error) {
       console.error('Error fetching saved recipes:', error);

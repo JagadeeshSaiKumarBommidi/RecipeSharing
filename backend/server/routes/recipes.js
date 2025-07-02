@@ -4,6 +4,15 @@ import User from '../models/User.js';
 
 const router = express.Router();
 
+// Health check for recipes routes
+router.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'Recipes routes are working',
+    user: req.user ? { id: req.user._id, username: req.user.username } : 'Not authenticated'
+  });
+});
+
 // Create recipe
 router.post('/', async (req, res) => {
   try {
@@ -267,8 +276,8 @@ router.get('/saved', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    // Ensure savedRecipes is always an array
-    const savedRecipes = user.savedRecipes || [];
+    // Ensure savedRecipes is always an array and filter out null values
+    const savedRecipes = (user.savedRecipes || []).filter(recipe => recipe !== null);
     res.json(savedRecipes);
   } catch (error) {
     console.error('Error fetching saved recipes:', error);
