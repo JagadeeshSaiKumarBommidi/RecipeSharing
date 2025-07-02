@@ -1,5 +1,34 @@
 # 🚀 Render Deployment Guide
 
+## 🚨 IMPORTANT: Render Service Type Fix
+
+**Your build is working perfectly!** ✅
+
+**Issue**: Render is treating your app as a Web Service instead of a Static Site.
+
+**Solution**: Configure as Static Site for frontend:
+
+### ✅ Correct Render Configuration:
+
+#### For Frontend (Static Site - Recommended):
+1. **Delete current service** if it's configured as Web Service
+2. **Create New → Static Site**
+3. **Connect GitHub repository**
+4. **Configure:**
+   - **Build Command**: `cd frontend && npm install && npm run build`
+   - **Publish Directory**: `frontend/dist`
+   - **Auto-Deploy**: Yes
+
+#### For Backend (Web Service):
+1. **Create New → Web Service** 
+2. **Connect same GitHub repository**
+3. **Configure:**
+   - **Build Command**: `cd backend && npm install`
+   - **Start Command**: `cd backend && npm start`
+   - **Environment Variables**: (see below)
+
+---
+
 ## 📋 Overview
 
 Render is a great alternative to Vercel for deploying full-stack applications. This guide will help you deploy your Recipe Sharing App to Render.
