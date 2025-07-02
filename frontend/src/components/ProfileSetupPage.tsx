@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Camera, User, FileText, Check, Upload } from 'lucide-react';
+import { Camera, User, FileText, Check, SkipBack as Skip, Upload } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_ENDPOINTS } from '../config/api';
 

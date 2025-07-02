@@ -39,7 +39,6 @@ export const Profile: React.FC = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
       if (response.ok) {
         const data = await response.json();
         setProfile(data);
@@ -78,7 +77,6 @@ export const Profile: React.FC = () => {
         },
         body: JSON.stringify(editData)
       });
-
       if (response.ok) {
         const updatedUser = await response.json();
         setProfile(updatedUser);

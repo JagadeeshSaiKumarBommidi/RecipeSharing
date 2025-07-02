@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Feed } from './Feed';
 import { Profile } from './Profile';
 import { Friends } from './Friends';
-import { Chat } from './Chat';
+import Chat from './Chat';
 import { CreateRecipe } from './CreateRecipe';
 import { Games } from './Games';
 import { Shopping } from './Shopping';
