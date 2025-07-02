@@ -15,5 +15,7 @@ export default defineConfig({
   preview: {
     host: true, // Allow external connections in preview mode
     port: 4173,
+    strictPort: false,
+    cors: true,
   },
 });
