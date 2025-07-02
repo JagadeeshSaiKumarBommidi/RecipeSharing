@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChefHat, Mail, Lock, User, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_ENDPOINTS } from '../config/api';
 
 export const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -59,7 +60,7 @@ export const AuthPage: React.FC = () => {
     setError('');
 
     try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
+      const endpoint = isLogin ? API_ENDPOINTS.AUTH.LOGIN : API_ENDPOINTS.AUTH.SIGNUP;
       const payload = isLogin 
         ? { email: formData.email, password: formData.password }
         : {
@@ -69,7 +70,7 @@ export const AuthPage: React.FC = () => {
             fullName: formData.fullName
           };
 
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

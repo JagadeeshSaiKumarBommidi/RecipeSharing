@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MessageCircle, Send, Search, Users, User, ArrowLeft } from 'lucide-react';
 import io from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
+import { API_ENDPOINTS, SOCKET_URL_CONFIG } from '../config/api';
 
 interface Message {
   _id: string;
@@ -41,7 +42,7 @@ export const Chat: React.FC = () => {
     fetchFriends();
     
     // Initialize socket connection
-    const newSocket = io('http://localhost:5000');
+    const newSocket = io(SOCKET_URL_CONFIG);
     setSocket(newSocket);
 
     newSocket.emit('join', user?.id);
@@ -69,7 +70,7 @@ export const Chat: React.FC = () => {
 
   const fetchFriends = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/friends', {
+      const response = await fetch(API_ENDPOINTS.FRIENDS.LIST, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       if (response.ok) {
@@ -85,7 +86,7 @@ export const Chat: React.FC = () => {
 
   const fetchMessages = async (friendId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/chat/messages/${friendId}`, {
+      const response = await fetch(`${API_ENDPOINTS.CHAT.MESSAGES}/${friendId}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       if (response.ok) {
@@ -101,7 +102,7 @@ export const Chat: React.FC = () => {
     if (!newMessage.trim() || !selectedFriend) return;
 
     try {
-      const response = await fetch('http://localhost:5000/api/chat/send', {
+      const response = await fetch(API_ENDPOINTS.CHAT.SEND, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
