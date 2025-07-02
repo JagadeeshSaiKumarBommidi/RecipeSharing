@@ -510,7 +510,7 @@ export const Feed: React.FC = () => {
     if (!commentText?.trim()) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/recipes/${recipeId}/comment`, {
+      const response = await fetch(API_ENDPOINTS.RECIPES.COMMENT(recipeId), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

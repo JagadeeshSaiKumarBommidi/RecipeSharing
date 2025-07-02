@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Edit3, Settings, Camera, MapPin, Calendar, Users, ChefHat } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_ENDPOINTS } from '../config/api';
 
 interface UserProfile {
   _id: string;
@@ -33,7 +34,7 @@ export const Profile: React.FC = () => {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/users/profile', {
+      const response = await fetch(API_ENDPOINTS.USERS.PROFILE, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -69,7 +70,7 @@ export const Profile: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/users/profile', {
+      const response = await fetch(API_ENDPOINTS.USERS.UPDATE, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -41,6 +41,7 @@ export const API_ENDPOINTS = {
     SUGGESTIONS: `${API_BASE_URL}/api/users/suggestions/new`,
     FOLLOWERS: `${API_BASE_URL}/api/users/followers-list`,
     FOLLOW: (userId: string) => `${API_BASE_URL}/api/users/${userId}/follow`,
+    SEARCH: (query: string) => `${API_BASE_URL}/api/users/search/${query}`,
   },
   RECIPES: {
     LIST: `${API_BASE_URL}/api/recipes`,
@@ -56,12 +57,14 @@ export const API_ENDPOINTS = {
     GET_BY_ID: (id: string) => `${API_BASE_URL}/api/recipes/${id}`,
     UPDATE: (id: string) => `${API_BASE_URL}/api/recipes/${id}`,
     DELETE: (id: string) => `${API_BASE_URL}/api/recipes/${id}`,
+    COMMENT: (id: string) => `${API_BASE_URL}/api/recipes/${id}/comment`,
   },
   FRIENDS: {
     LIST: `${API_BASE_URL}/api/friends`,
-    REQUEST: `${API_BASE_URL}/api/friends/request`,
-    ACCEPT: `${API_BASE_URL}/api/friends/accept`,
-    REJECT: `${API_BASE_URL}/api/friends/reject`,
+    REQUESTS: `${API_BASE_URL}/api/friends/requests`,
+    REQUEST: (userId: string) => `${API_BASE_URL}/api/friends/request/${userId}`,
+    ACCEPT: (userId: string) => `${API_BASE_URL}/api/friends/accept/${userId}`,
+    REJECT: (userId: string) => `${API_BASE_URL}/api/friends/reject/${userId}`,
   },
   CHAT: {
     MESSAGES: `${API_BASE_URL}/api/chat`,
@@ -70,6 +73,7 @@ export const API_ENDPOINTS = {
   STORIES: {
     FEED: `${API_BASE_URL}/api/stories/feed`,
     CREATE: `${API_BASE_URL}/api/stories`,
+    VIEW: (storyId: string) => `${API_BASE_URL}/api/stories/${storyId}/view`,
   },
   CHALLENGES: {
     CURRENT: `${API_BASE_URL}/api/challenges/current`,

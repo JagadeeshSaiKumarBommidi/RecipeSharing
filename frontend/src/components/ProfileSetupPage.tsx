@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Camera, User, FileText, Check, SkipBack as Skip, Upload } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_ENDPOINTS } from '../config/api';
 
 export const ProfileSetupPage: React.FC = () => {
   const { user, updateUser, completeSetup } = useAuth();
@@ -26,7 +27,7 @@ export const ProfileSetupPage: React.FC = () => {
   const updateProfile = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/users/profile', {
+      const response = await fetch(API_ENDPOINTS.USERS.UPDATE, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

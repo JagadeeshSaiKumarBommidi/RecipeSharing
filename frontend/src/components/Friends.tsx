@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserPlus, UserCheck, Users, Search, X, Check } from 'lucide-react';
+import { API_ENDPOINTS } from '../config/api';
 
 interface FriendRequest {
   _id: string;
@@ -41,7 +42,7 @@ export const Friends: React.FC = () => {
 
   const fetchFriends = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/friends', {
+      const response = await fetch(API_ENDPOINTS.FRIENDS.LIST, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       if (response.ok) {
@@ -55,7 +56,7 @@ export const Friends: React.FC = () => {
 
   const fetchFriendRequests = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/friends/requests', {
+      const response = await fetch(API_ENDPOINTS.FRIENDS.REQUESTS, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       if (response.ok) {
@@ -71,7 +72,7 @@ export const Friends: React.FC = () => {
 
   const fetchSuggestions = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/users/suggestions/new', {
+      const response = await fetch(API_ENDPOINTS.USERS.SUGGESTIONS, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       if (response.ok) {
@@ -85,7 +86,7 @@ export const Friends: React.FC = () => {
 
   const searchUsers = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/users/search/${searchQuery}`, {
+      const response = await fetch(API_ENDPOINTS.USERS.SEARCH(searchQuery), {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       if (response.ok) {
@@ -99,7 +100,7 @@ export const Friends: React.FC = () => {
 
   const sendFriendRequest = async (userId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/friends/request/${userId}`, {
+      const response = await fetch(API_ENDPOINTS.FRIENDS.REQUEST(userId), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
@@ -114,7 +115,7 @@ export const Friends: React.FC = () => {
 
   const acceptFriendRequest = async (userId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/friends/accept/${userId}`, {
+      const response = await fetch(API_ENDPOINTS.FRIENDS.ACCEPT(userId), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
@@ -129,7 +130,7 @@ export const Friends: React.FC = () => {
 
   const rejectFriendRequest = async (userId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/friends/reject/${userId}`, {
+      const response = await fetch(API_ENDPOINTS.FRIENDS.REJECT(userId), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });

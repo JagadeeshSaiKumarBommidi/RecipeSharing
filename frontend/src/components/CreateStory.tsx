@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { X, Camera, Type, Image as ImageIcon, Save, Send, Video, Circle } from 'lucide-react';
+import { API_ENDPOINTS } from '../config/api';
 
 interface CreateStoryProps {
   onClose: () => void;
@@ -197,7 +198,7 @@ export const CreateStory: React.FC<CreateStoryProps> = ({ onClose, onStoryCreate
         formData.append('type', 'media');
       }
       
-      const response = await fetch('http://localhost:5000/api/stories', {
+      const response = await fetch(API_ENDPOINTS.STORIES.CREATE, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

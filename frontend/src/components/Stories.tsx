@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Eye } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_ENDPOINTS } from '../config/api';
 
 interface Story {
   _id: string;
@@ -79,7 +80,7 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
 
   const fetchStories = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/stories/feed', {
+      const response = await fetch(API_ENDPOINTS.STORIES.FEED, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -121,7 +122,7 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
 
   const markAsViewed = async (storyId: string) => {
     try {
-      await fetch(`http://localhost:5000/api/stories/${storyId}/view`, {
+      await fetch(API_ENDPOINTS.STORIES.VIEW(storyId), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -136,7 +137,7 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
     if (!newStory.content.trim()) return;
 
     try {
-      const response = await fetch('http://localhost:5000/api/stories', {
+      const response = await fetch(API_ENDPOINTS.STORIES.CREATE, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
