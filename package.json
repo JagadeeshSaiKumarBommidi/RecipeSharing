@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Full-stack Recipe Sharing Application",
   "private": true,
-
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:frontend": "cd frontend && npm run dev",
@@ -16,6 +15,10 @@
     "clean": "rimraf frontend/node_modules backend/node_modules node_modules frontend/dist"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/node": "^24.0.10",
+    "@types/webidl-conversions": "^7.0.3",
+    "@types/whatwg-url": "^13.0.0",
     "concurrently": "^8.2.2"
   }
 }
