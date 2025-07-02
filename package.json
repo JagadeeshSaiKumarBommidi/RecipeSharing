@@ -3,10 +3,7 @@
   "version": "1.0.0",
   "description": "Full-stack Recipe Sharing Application",
   "private": true,
-  "workspaces": [
-    "frontend",
-    "backend"
-  ],
+
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:frontend": "cd frontend && npm run dev",
