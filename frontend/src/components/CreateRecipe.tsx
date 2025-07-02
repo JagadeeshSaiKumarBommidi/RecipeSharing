@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Plus, Upload, Camera, Video, Clock, Users, ChefHat } from 'lucide-react';
+import { API_ENDPOINTS } from '../config/api';
 
 interface CreateRecipeProps {
   onClose: () => void;
@@ -113,7 +114,7 @@ export const CreateRecipe: React.FC<CreateRecipeProps> = ({ onClose }) => {
         instructions: instructions.filter(inst => inst.instruction)
       };
 
-      const response = await fetch('http://localhost:5000/api/recipes', {
+      const response = await fetch(API_ENDPOINTS.RECIPES.CREATE, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
