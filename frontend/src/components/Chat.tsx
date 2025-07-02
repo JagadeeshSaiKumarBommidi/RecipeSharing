@@ -100,9 +100,13 @@ const Chat: React.FC = () => {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedFriend) return;
+    if (!newMessage.trim() || !selectedFriend) {
+      console.log('No message or no friend selected');
+      return;
+    }
 
     try {
+      console.log('Sending message:', newMessage, 'to', selectedFriend._id);
       const response = await fetch(API_ENDPOINTS.CHAT.SEND, {
         method: 'POST',
         headers: {
@@ -119,7 +123,7 @@ const Chat: React.FC = () => {
         const sentMessage = await response.json();
         setMessages(prev => [...prev, sentMessage]);
         setNewMessage('');
-
+        console.log('Message sent successfully:', sentMessage);
         // Send through socket for real-time delivery
         if (socket) {
           socket.emit('sendMessage', {
@@ -127,7 +131,11 @@ const Chat: React.FC = () => {
             message: newMessage,
             senderId: user?.id
           });
+          console.log('Message sent through socket');
         }
+      } else {
+        const errorText = await response.text();
+        console.error('API error:', errorText);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -260,28 +268,29 @@ const Chat: React.FC = () => {
                         <p className="text-gray-600 text-sm sm:text-base">Start your conversation with {selectedFriend.fullName}!</p>
                       </div>
                     ) : (
-                      messages.map((message) => (
+                    messages.map((message) => (
+                      <div
+                        key={message._id}
+                        className={`flex ${message.sender._id === user?.id ? 'justify-end' : 'justify-start'}`}
+                      >
                         <div
-                          key={message._id}
-                          className={`flex ${message.sender._id === user?.id ? 'justify-end' : 'justify-start'}`}
+                          className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                            message.sender._id === user?.id
+                              ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
+                              : 'bg-gray-100 text-gray-900'
+                          }`}
                         >
-                          <div
-                            className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                              message.sender._id === user?.id
-                                ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
-                                : 'bg-gray-100 text-gray-900'
-                            }`}
-                          >
-                            <p className="text-sm sm:text-base">{message.message}</p>
-                            <p className={`text-xs mt-1 ${
-                              message.sender._id === user?.id ? 'text-orange-100' : 'text-gray-500'
-                            }`}>
-                              {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                          </div>
+                          <p className="text-sm sm:text-base">{message.message}</p>
+                          <p className={`text-xs mt-1 ${
+                            message.sender._id === user?.id ? 'text-orange-100' : 'text-gray-500'
+                          }`}>
+                            {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
                         </div>
-                      ))
-                    )}
+                      </div>
+                    ))
+                    )
+                  }
                   </div>
 
                   {/* Message Input */}

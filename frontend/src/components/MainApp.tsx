@@ -8,17 +8,69 @@ import Chat from './Chat';
 import { CreateRecipe } from './CreateRecipe';
 import { Games } from './Games';
 import { Shopping } from './Shopping';
+import { Notification, NotificationItem } from './Notification';
 
 export const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState('feed');
   const [showCreateRecipe, setShowCreateRecipe] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const { user, logout } = useAuth();
+
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [lastNotifId, setLastNotifId] = useState(3);
+
+  // Simulate real-time notifications
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setNotifications((prev) => {
+        // Randomly pick a type
+        const types = ['friend_request', 'like', 'comment'] as const;
+        const type = types[Math.floor(Math.random() * types.length)];
+        const fromUser = ['Alice', 'Bob', 'Charlie', 'David'][Math.floor(Math.random() * 4)];
+        const messages = {
+          friend_request: 'sent you a friend request.',
+          like: 'liked your post.',
+          comment: 'commented on your post.'
+        };
+        const newNotif: NotificationItem = {
+          id: (lastNotifId + 1).toString(),
+          type,
+          fromUser,
+          message: messages[type],
+          createdAt: new Date().toISOString(),
+          read: false
+        };
+        setLastNotifId((id) => id + 1);
+        return [newNotif, ...prev].slice(0, 10); // keep max 10
+      });
+    }, 15000); // every 15 seconds
+    return () => clearInterval(interval);
+  }, [lastNotifId]);
+
+  // Mark all as read when notification bar is opened
+  React.useEffect(() => {
+    if (showNotifications) {
+      setNotifications((prev) => prev.map(n => ({ ...n, read: true })));
+    }
+  }, [showNotifications]);
+
+  // Only allow notifications from app users (friends, following, followers, or self)
+  function isAppUser(fromUser: string) {
+    if (!user) return false;
+    if (fromUser === user.username) return true;
+    if (user.friends && user.friends.includes(fromUser)) return true;
+    if (user.following && user.following.includes(fromUser)) return true;
+    if (user.followers && user.followers.includes(fromUser)) return true;
+    return false;
+  }
+
+  const filteredNotifications = notifications.filter(n => isAppUser(n.fromUser));
 
   const tabs = [
     { id: 'feed', label: 'Home', icon: Home },
     { id: 'friends', label: 'Search', icon: Users },
-    { id: 'games', label: 'Reels', icon: Gamepad2 },
+    { id: 'games', label: 'Games', icon: Gamepad2 },
     { id: 'shopping', label: 'Shop', icon: ShoppingCart },
     { id: 'chat', label: 'Messages', icon: MessageCircle },
     { id: 'profile', label: 'Profile', icon: User }
@@ -95,12 +147,24 @@ export const MainApp: React.FC = () => {
               </button>
 
               {/* Notifications */}
-              <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <Bell className="w-6 h-6 text-gray-700" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
-                  3
-                </span>
-              </button>
+              <div className="relative">
+                <button
+                  className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  onClick={() => setShowNotifications((v) => !v)}
+                >
+                  <Bell className="w-6 h-6 text-gray-700" />
+                  {filteredNotifications.filter(n => !n.read).length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
+                      {filteredNotifications.filter(n => !n.read).length}
+                    </span>
+                  )}
+                </button>
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 z-50">
+                    <Notification notifications={filteredNotifications} />
+                  </div>
+                )}
+              </div>
 
               {/* Profile Picture */}
               <div className="relative">

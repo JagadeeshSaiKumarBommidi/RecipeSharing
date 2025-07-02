@@ -69,11 +69,7 @@ interface SuggestedUser {
   recipeCount: number;
 }
 
-interface UserStats {
-  recipesPosted: number;
-  totalLikes: number;
-  followersCount: number;
-}
+// Removed UserStats interface as it is no longer used
 
 interface Follower {
   _id: string;
@@ -103,11 +99,7 @@ export const Feed: React.FC = () => {
   const [showCreateStory, setShowCreateStory] = useState(false);
   const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
   const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>([]);
-  const [userStats, setUserStats] = useState<UserStats>({
-    recipesPosted: 0,
-    totalLikes: 0,
-    followersCount: 0
-  });
+  // Removed userStats state as Your Stats section is no longer used
   const [showShareModal, setShowShareModal] = useState<string | null>(null);
   const [savedRecipes, setSavedRecipes] = useState<Set<string>>(new Set());
   
@@ -237,13 +229,9 @@ export const Feed: React.FC = () => {
         }
       });
       
-      let recipesPosted = 0;
-      let totalLikes = 0;
-      
       if (recipesResponse.ok) {
-        const recipes = await recipesResponse.json();
-        recipesPosted = recipes.length;
-        totalLikes = recipes.reduce((sum: number, recipe: Recipe) => sum + (recipe.likes?.length || 0), 0);
+        // const recipes = await recipesResponse.json();
+        // You can use recipes here if needed in the future
       }
       
       const profileResponse = await fetch(API_ENDPOINTS.USERS.PROFILE, {
@@ -252,17 +240,11 @@ export const Feed: React.FC = () => {
         }
       });
       
-      let followersCount = 0;
       if (profileResponse.ok) {
-        const profile = await profileResponse.json();
-        followersCount = profile.followers?.length || 0;
+        // const profile = await profileResponse.json();
+        // followersCount = profile.followers?.length || 0;
       }
-      
-      setUserStats({
-        recipesPosted,
-        totalLikes,
-        followersCount
-      });
+
     } catch (error) {
       console.error('Error fetching user stats:', error);
     }
@@ -591,25 +573,7 @@ export const Feed: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto flex gap-4 lg:gap-6 p-4 pb-20 md:pb-6">
         {/* Left Sidebar */}
-        <div className="hidden lg:block w-64 space-y-6">
-          {/* Your Stats Section */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Your Stats</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Recipes Posted</span>
-                <span className="text-white font-semibold">{userStats.recipesPosted}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-blue-200">Total Likes</span>
-                <span className="text-white font-semibold">{userStats.totalLikes}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-blue-200">Followers</span>
-                <span className="text-white font-semibold">{userStats.followersCount}</span>
-              </div>
-            </div>
-          </div>
+    <div className="hidden lg:block w-64 space-y-6">
 
           {/* Liked Recipes Section */}
           <div className="premium-bg-card rounded-2xl p-6 premium-shadow backdrop-blur-xl">
