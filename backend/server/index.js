@@ -74,7 +74,8 @@ const io = new Server(server, {
       "http://127.0.0.1:4173",
       "https://6x56z9gt-5173.inc1.devtunnels.ms",
       /^https:\/\/.*\.inc1\.devtunnels\.ms$/,
-      "https://recipesharing-3-frontend.onrender.com", // Production frontend
+      "https://recipesharing-3-frontend.onrender.com", // Old frontend URL
+      "https://recipesharing-xgnp.onrender.com", // New frontend URL
       process.env.CLIENT_URL,
       ...getNetworkIPs()
     ].filter(Boolean), // Remove any undefined values
@@ -92,7 +93,8 @@ app.use(cors({
     "http://127.0.0.1:4173",
     "https://6x56z9gt-5173.inc1.devtunnels.ms",
     /^https:\/\/.*\.inc1\.devtunnels\.ms$/,
-    "https://recipesharing-3-frontend.onrender.com", // Production frontend
+    "https://recipesharing-3-frontend.onrender.com", // Old frontend URL
+    "https://recipesharing-xgnp.onrender.com", // New frontend URL
     process.env.CLIENT_URL,
     ...getNetworkIPs()
   ].filter(Boolean),
