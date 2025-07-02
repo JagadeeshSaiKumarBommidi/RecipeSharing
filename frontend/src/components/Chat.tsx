@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Send, Search, Users, User, ArrowLeft } from 'lucide-react';
+import { MessageCircle, Send, Search, User, ArrowLeft } from 'lucide-react';
 import io from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 import { API_ENDPOINTS, SOCKET_URL_CONFIG } from '../config/api';
 
@@ -29,13 +30,13 @@ interface Friend {
   profilePicture?: string;
 }
 
-export const Chat: React.FC = () => {
+const Chat: React.FC = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
-  const [socket, setSocket] = useState<any>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export const Chat: React.FC = () => {
     return () => {
       newSocket.close();
     };
-  }, [user]);
+  }, [user, selectedFriend]);
 
   useEffect(() => {
     if (selectedFriend) {
@@ -319,3 +320,5 @@ export const Chat: React.FC = () => {
     </div>
   );
 };
+
+export default Chat;

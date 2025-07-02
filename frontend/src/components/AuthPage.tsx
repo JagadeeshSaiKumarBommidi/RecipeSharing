@@ -85,7 +85,7 @@ export const AuthPage: React.FC = () => {
       } else {
         setError(data.message || 'An error occurred');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
