@@ -17,5 +17,10 @@ export default defineConfig({
     port: 4173,
     strictPort: false,
     cors: true,
+    allowedHosts: [
+      'localhost',
+      '.onrender.com',
+      'recipesharing-3-frontend.onrender.com'
+    ],
   },
 });

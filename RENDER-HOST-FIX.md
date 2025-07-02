@@ -6,7 +6,7 @@
 
 **Cause**: Your frontend is running as a **Web Service** with `npm start`, but it should be a **Static Site** serving built files.
 
-## ✅ SOLUTION: Configure as Static Site
+## ✅ SOLUTION 1: Configure as Static Site (RECOMMENDED)
 
 ### Step 1: Delete Current Service
 1. **Go to Render Dashboard**: https://dashboard.render.com
@@ -25,30 +25,35 @@
    Auto-Deploy: Yes
    ```
 
-### Step 3: Verify Configuration
-- ✅ **Service Type**: Static Site (not Web Service)
-- ✅ **Build Command**: `cd frontend && npm install && npm run build`
-- ✅ **Publish Directory**: `frontend/dist`
-- ✅ **No Start Command** (static sites don't need one)
+## ✅ SOLUTION 2: Quick Fix for Current Service
+
+If you want to keep the current Web Service:
+
+1. **Go to Settings → Environment Variables**
+2. **Add these variables**:
+   ```
+   VITE_HOST=0.0.0.0
+   HOST=0.0.0.0
+   ```
+3. **Save and Redeploy**
+
+## ✅ SOLUTION 3: Use Updated Vite Config
+
+I've updated `vite.config.ts` to allow Render hosts. Commit and push:
+
+```bash
+git add .
+git commit -m "Fix Render host blocking - add allowedHosts"
+git push
+```
 
 ## 🎯 Expected Result
 
-After creating as Static Site:
+After any of these fixes:
 - ✅ **No host blocking errors**
-- ✅ **Fast static file serving**
-- ✅ **Your React app loads properly**
+- ✅ **Your React app loads at recipesharing-3-frontend.onrender.com**
+- ✅ **Fast static file serving** (if using Static Site)
 - ✅ **Global accessibility**
-
-## 🚀 Alternative: Quick Fix for Current Service
-
-If you want to keep the current service, update these settings:
-
-1. **Go to Settings → Environment**
-2. **Add environment variable**:
-   ```
-   VITE_HOST=0.0.0.0
-   ```
-3. **Save and Redeploy**
 
 ## 💡 Why This Happens
 
