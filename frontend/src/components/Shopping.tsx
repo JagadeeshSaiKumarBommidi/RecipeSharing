@@ -533,7 +533,7 @@ export const Shopping: React.FC = () => {
 
   // Main Shopping Page
   return (
-    <div className="max-w-6xl mx-auto p-3 pb-20 md:pb-4">
+    <div className="max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-6xl mx-auto p-3 pb-20 md:pb-4">
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div>
