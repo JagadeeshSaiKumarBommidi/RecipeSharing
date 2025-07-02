@@ -38,10 +38,21 @@ export const API_ENDPOINTS = {
   USERS: {
     PROFILE: `${API_BASE_URL}/api/users/profile`,
     UPDATE: `${API_BASE_URL}/api/users/profile`,
+    SUGGESTIONS: `${API_BASE_URL}/api/users/suggestions/new`,
+    FOLLOWERS: `${API_BASE_URL}/api/users/followers-list`,
+    FOLLOW: (userId: string) => `${API_BASE_URL}/api/users/${userId}/follow`,
   },
   RECIPES: {
     LIST: `${API_BASE_URL}/api/recipes`,
     CREATE: `${API_BASE_URL}/api/recipes`,
+    FEED: `${API_BASE_URL}/api/recipes/feed`,
+    SAVED: `${API_BASE_URL}/api/recipes/saved`,
+    LIKED: `${API_BASE_URL}/api/recipes/liked`,
+    POPULAR: `${API_BASE_URL}/api/recipes/popular`,
+    RECOMMENDATIONS: `${API_BASE_URL}/api/recipes/recommendations`,
+    LIKE: (id: string) => `${API_BASE_URL}/api/recipes/${id}/like`,
+    SAVE: (id: string) => `${API_BASE_URL}/api/recipes/${id}/save`,
+    BY_USER: (userId: string) => `${API_BASE_URL}/api/recipes/user/${userId}`,
     GET_BY_ID: (id: string) => `${API_BASE_URL}/api/recipes/${id}`,
     UPDATE: (id: string) => `${API_BASE_URL}/api/recipes/${id}`,
     DELETE: (id: string) => `${API_BASE_URL}/api/recipes/${id}`,
@@ -55,6 +66,14 @@ export const API_ENDPOINTS = {
   CHAT: {
     MESSAGES: `${API_BASE_URL}/api/chat`,
     SEND: `${API_BASE_URL}/api/chat`,
+  },
+  STORIES: {
+    FEED: `${API_BASE_URL}/api/stories/feed`,
+    CREATE: `${API_BASE_URL}/api/stories`,
+  },
+  CHALLENGES: {
+    CURRENT: `${API_BASE_URL}/api/challenges/current`,
+    JOIN: (id: string) => `${API_BASE_URL}/api/challenges/${id}/join`,
   },
   HEALTH: `${API_BASE_URL}/api/health`,
 };

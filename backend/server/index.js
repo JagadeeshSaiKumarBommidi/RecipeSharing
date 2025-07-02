@@ -67,38 +67,16 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:4173",
-      "http://127.0.0.1:5173",
-      "http://127.0.0.1:4173",
-      "https://6x56z9gt-5173.inc1.devtunnels.ms",
-      /^https:\/\/.*\.inc1\.devtunnels\.ms$/,
-      "https://recipesharing-3-frontend.onrender.com", // Old frontend URL
-      "https://recipesharing-xgnp.onrender.com", // New frontend URL
-      process.env.CLIENT_URL,
-      ...getNetworkIPs()
-    ].filter(Boolean), // Remove any undefined values
+    origin: "*", // TEMPORARY: Allow all origins for testing
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    credentials: true
+    credentials: false // Must be false when origin is "*"
   }
 });
 
 // Middleware
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "http://localhost:4173",
-    "http://127.0.0.1:5173", 
-    "http://127.0.0.1:4173",
-    "https://6x56z9gt-5173.inc1.devtunnels.ms",
-    /^https:\/\/.*\.inc1\.devtunnels\.ms$/,
-    "https://recipesharing-3-frontend.onrender.com", // Old frontend URL
-    "https://recipesharing-xgnp.onrender.com", // New frontend URL
-    process.env.CLIENT_URL,
-    ...getNetworkIPs()
-  ].filter(Boolean),
-  credentials: true
+  origin: "*", // TEMPORARY: Allow all origins for testing
+  credentials: false // Must be false when origin is "*"
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));

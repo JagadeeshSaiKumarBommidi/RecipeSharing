@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Stories } from './Stories';
 import { StoryRing } from './StoryRing';
 import { CreateStory } from './CreateStory';
+import { API_ENDPOINTS } from '../config/api';
 
 interface Recipe {
   _id: string;
@@ -137,7 +138,7 @@ export const Feed: React.FC = () => {
 
   const fetchRecipes = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/recipes/feed?limit=10`, {
+      const response = await fetch(`${API_ENDPOINTS.RECIPES.FEED}?limit=10`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -156,7 +157,7 @@ export const Feed: React.FC = () => {
 
   const fetchStories = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/stories/feed', {
+      const response = await fetch(API_ENDPOINTS.STORIES.FEED, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -173,7 +174,7 @@ export const Feed: React.FC = () => {
 
   const fetchCurrentChallenge = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/challenges/current', {
+      const response = await fetch(API_ENDPOINTS.CHALLENGES.CURRENT, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -190,7 +191,7 @@ export const Feed: React.FC = () => {
 
   const fetchSuggestedUsers = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/users/suggestions/new', {
+      const response = await fetch(API_ENDPOINTS.USERS.SUGGESTIONS, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -201,7 +202,7 @@ export const Feed: React.FC = () => {
         const usersWithRecipeCount = await Promise.all(
           data.map(async (user: SuggestedUser) => {
             try {
-              const recipesResponse = await fetch(`http://localhost:5000/api/recipes/user/${user._id}`, {
+              const recipesResponse = await fetch(API_ENDPOINTS.RECIPES.BY_USER(user._id), {
                 headers: {
                   'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -230,7 +231,7 @@ export const Feed: React.FC = () => {
     if (!user?.id) return;
     
     try {
-      const recipesResponse = await fetch(`http://localhost:5000/api/recipes/user/${user.id}`, {
+      const recipesResponse = await fetch(API_ENDPOINTS.RECIPES.BY_USER(user.id), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -245,7 +246,7 @@ export const Feed: React.FC = () => {
         totalLikes = recipes.reduce((sum: number, recipe: Recipe) => sum + (recipe.likes?.length || 0), 0);
       }
       
-      const profileResponse = await fetch('http://localhost:5000/api/users/profile', {
+      const profileResponse = await fetch(API_ENDPOINTS.USERS.PROFILE, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -269,7 +270,7 @@ export const Feed: React.FC = () => {
 
   const fetchSavedRecipes = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/recipes/saved', {
+      const response = await fetch(API_ENDPOINTS.RECIPES.SAVED, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -288,7 +289,7 @@ export const Feed: React.FC = () => {
   const fetchLikedRecipes = async () => {
     setSidebarLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/recipes/liked', {
+      const response = await fetch(API_ENDPOINTS.RECIPES.LIKED, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -308,7 +309,7 @@ export const Feed: React.FC = () => {
   const fetchSavedRecipesList = async () => {
     setSidebarLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/recipes/saved', {
+      const response = await fetch(API_ENDPOINTS.RECIPES.SAVED, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -328,7 +329,7 @@ export const Feed: React.FC = () => {
   const fetchFollowersList = async () => {
     setSidebarLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/users/followers-list', {
+      const response = await fetch(API_ENDPOINTS.USERS.FOLLOWERS, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -348,7 +349,7 @@ export const Feed: React.FC = () => {
   const fetchPopularRecipes = async () => {
     setSidebarLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/recipes/popular', {
+      const response = await fetch(API_ENDPOINTS.RECIPES.POPULAR, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -368,7 +369,7 @@ export const Feed: React.FC = () => {
   const fetchRecommendations = async () => {
     setSidebarLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/recipes/recommendations', {
+      const response = await fetch(API_ENDPOINTS.RECIPES.RECOMMENDATIONS, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -402,7 +403,7 @@ export const Feed: React.FC = () => {
 
   const handleLike = async (recipeId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/recipes/${recipeId}/like`, {
+      const response = await fetch(API_ENDPOINTS.RECIPES.LIKE(recipeId), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -422,7 +423,7 @@ export const Feed: React.FC = () => {
 
   const handleSave = async (recipeId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/recipes/${recipeId}/save`, {
+      const response = await fetch(API_ENDPOINTS.RECIPES.SAVE(recipeId), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -470,7 +471,7 @@ export const Feed: React.FC = () => {
     if (!currentChallenge) return;
     
     try {
-      const response = await fetch(`http://localhost:5000/api/challenges/${currentChallenge._id}/join`, {
+      const response = await fetch(API_ENDPOINTS.CHALLENGES.JOIN(currentChallenge._id), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -488,7 +489,7 @@ export const Feed: React.FC = () => {
 
   const handleFollowUser = async (userId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${userId}/follow`, {
+      const response = await fetch(API_ENDPOINTS.USERS.FOLLOW(userId), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
