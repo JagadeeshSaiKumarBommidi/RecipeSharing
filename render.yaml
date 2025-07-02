@@ -1,0 +1,31 @@
+services:
+  # Backend API Service
+  - type: web
+    name: recipe-sharing-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        fromSecret: MONGODB_URI
+      - key: JWT_SECRET
+        fromSecret: JWT_SECRET
+      - key: CLIENT_URL
+        value: https://recipe-sharing-frontend.onrender.com
+
+  # Frontend Static Site
+  - type: web
+    name: recipe-sharing-frontend
+    env: static
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
