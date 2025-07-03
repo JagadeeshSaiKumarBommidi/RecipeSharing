@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Upload, Camera, Video, Clock, Users, ChefHat } from 'lucide-react';
+import { X, Plus, Camera, Video, Clock, Users, ChefHat } from 'lucide-react';
 import { API_ENDPOINTS } from '../config/api';
 
 interface CreateRecipeProps {

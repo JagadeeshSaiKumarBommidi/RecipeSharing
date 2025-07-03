@@ -69,7 +69,7 @@ export const MainApp: React.FC = () => {
 
   const tabs = [
     { id: 'feed', label: 'Home', icon: Home },
-    { id: 'friends', label: 'Search', icon: Users },
+    { id: 'friends', label: 'Friends', icon: Users },
     { id: 'games', label: 'Games', icon: Gamepad2 },
     { id: 'shopping', label: 'Shop', icon: ShoppingCart },
     { id: 'chat', label: 'Messages', icon: MessageCircle },

@@ -398,9 +398,632 @@ const TicTacToe: React.FC = () => {
   );
 };
 
+// WordChef Game Component
+const WordChefGame: React.FC = () => {
+  const [letters, setLetters] = useState<string[]>([]);
+  const [userWords, setUserWords] = useState<string[]>([]);
+  const [currentWord, setCurrentWord] = useState<string>('');
+  const [score, setScore] = useState<number>(0);
+  const [timer, setTimer] = useState<number>(60);
+  const [gameActive, setGameActive] = useState<boolean>(false);
+  const [gameOver, setGameOver] = useState<boolean>(false);
+  const [validWords, setValidWords] = useState<string[]>([]);
+  
+  // Food-themed word sets
+  const wordSets = [
+    {
+      letters: ['S', 'A', 'U', 'C', 'E', 'P', 'A', 'N'],
+      validWords: ['sauce', 'pan', 'spa', 'can', 'ace', 'pace', 'sap', 'cane', 'cape', 'nap', 'nape', 'pace']
+    },
+    {
+      letters: ['B', 'A', 'K', 'I', 'N', 'G'],
+      validWords: ['baking', 'king', 'baking', 'akin', 'gain', 'kin', 'bag', 'ban', 'bin', 'ink', 'nab']
+    },
+    {
+      letters: ['C', 'H', 'O', 'P', 'P', 'E', 'D'],
+      validWords: ['chopped', 'hope', 'chop', 'cope', 'hop', 'pep', 'pod', 'code', 'doe', 'echo', 'pep']
+    },
+    {
+      letters: ['R', 'E', 'C', 'I', 'P', 'E'],
+      validWords: ['recipe', 'rice', 'pier', 'ripe', 'pipe', 'peer', 'pee', 'ice', 'pie', 'rip']
+    },
+    {
+      letters: ['S', 'P', 'I', 'C', 'E', 'S'],
+      validWords: ['spices', 'pies', 'sips', 'piece', 'spice', 'cis', 'spec', 'sip', 'pie', 'ice']
+    }
+  ];
+  
+  // Start a new game
+  const startGame = () => {
+    const randomSet = wordSets[Math.floor(Math.random() * wordSets.length)];
+    setLetters([...randomSet.letters].sort(() => Math.random() - 0.5));
+    setValidWords(randomSet.validWords);
+    setUserWords([]);
+    setCurrentWord('');
+    setScore(0);
+    setTimer(60);
+    setGameActive(true);
+    setGameOver(false);
+  };
+  
+  // Handle letter click
+  const handleLetterClick = (letter: string, index: number) => {
+    setCurrentWord(prev => prev + letter);
+    
+    // Temporarily remove the letter from the available letters
+    const newLetters = [...letters];
+    newLetters.splice(index, 1);
+    setLetters(newLetters);
+  };
+  
+  // Submit current word
+  const submitWord = () => {
+    if (currentWord.length < 3) {
+      alert('Words must be at least 3 letters long');
+      resetCurrentWord();
+      return;
+    }
+    
+    const wordLower = currentWord.toLowerCase();
+    
+    if (userWords.includes(wordLower)) {
+      alert('You already found this word');
+      resetCurrentWord();
+      return;
+    }
+    
+    if (validWords.includes(wordLower)) {
+      // Word is valid
+      setUserWords(prev => [...prev, wordLower]);
+      setScore(prev => prev + (currentWord.length * 10));
+      resetCurrentWord();
+    } else {
+      alert('Not a valid word');
+      resetCurrentWord();
+    }
+  };
+  
+  // Reset current word and restore letters
+  const resetCurrentWord = () => {
+    setCurrentWord('');
+    setLetters(prevLetters => {
+      const randomSet = wordSets.find(set => 
+        set.validWords.includes(validWords[0])
+      );
+      return randomSet ? [...randomSet.letters].sort(() => Math.random() - 0.5) : prevLetters;
+    });
+  };
+  
+  // Timer countdown
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (gameActive && timer > 0) {
+      interval = setInterval(() => {
+        setTimer(prev => prev - 1);
+      }, 1000);
+    } else if (timer === 0) {
+      setGameActive(false);
+      setGameOver(true);
+    }
+    
+    return () => clearInterval(interval);
+  }, [gameActive, timer]);
+  
+  return (
+    <div className="flex flex-col items-center my-8">
+      <h2 className="text-2xl font-bold mb-4">Word Chef</h2>
+      
+      {!gameActive && !gameOver ? (
+        <div className="text-center">
+          <p className="text-gray-700 mb-6">Create food-related words from the given letters. Each word must be at least 3 letters long.</p>
+          <button 
+            onClick={startGame}
+            className="bg-amber-500 hover:bg-amber-600 text-white px-8 py-3 rounded-lg font-medium"
+          >
+            Start Game
+          </button>
+        </div>
+      ) : (
+        <>
+          {gameActive && (
+            <div className="w-full max-w-xl">
+              <div className="flex justify-between items-center mb-6">
+                <div className="text-lg font-semibold">Score: {score}</div>
+                <div className="text-lg font-semibold">Time: {timer}s</div>
+              </div>
+              
+              <div className="bg-amber-50 p-6 rounded-lg mb-6 text-center">
+                <div className="text-2xl font-bold mb-4">{currentWord || 'Click letters below'}</div>
+                
+                <div className="flex flex-wrap justify-center gap-2 mb-6">
+                  {letters.map((letter, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleLetterClick(letter, index)}
+                      className="w-12 h-12 bg-amber-400 text-white rounded-md text-xl font-bold hover:bg-amber-500 transition-colors"
+                    >
+                      {letter}
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="flex gap-4">
+                  <button
+                    onClick={submitWord}
+                    disabled={currentWord.length < 3}
+                    className={`flex-1 py-2 rounded-md ${
+                      currentWord.length < 3 
+                        ? 'bg-gray-300 text-gray-500' 
+                        : 'bg-green-500 hover:bg-green-600 text-white'
+                    }`}
+                  >
+                    Submit
+                  </button>
+                  <button
+                    onClick={resetCurrentWord}
+                    className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-md"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+              
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <h3 className="font-bold mb-2">Words Found ({userWords.length}):</h3>
+                <div className="flex flex-wrap gap-2">
+                  {userWords.map((word, index) => (
+                    <span key={index} className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm">
+                      {word}
+                    </span>
+                  ))}
+                  {userWords.length === 0 && (
+                    <span className="text-gray-500 italic">No words found yet</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {gameOver && (
+            <div className="text-center">
+              <h3 className="text-xl font-bold mb-4">Game Over!</h3>
+              <p className="text-lg mb-2">Your score: {score}</p>
+              <p className="text-gray-700 mb-6">You found {userWords.length} words</p>
+              
+              <div className="mb-8">
+                <h4 className="font-bold mb-2">Words you found:</h4>
+                <div className="flex flex-wrap justify-center gap-2 mb-6">
+                  {userWords.map((word, index) => (
+                    <span key={index} className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm">
+                      {word}
+                    </span>
+                  ))}
+                </div>
+                
+                <h4 className="font-bold mb-2">All possible words:</h4>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {validWords.map((word, index) => (
+                    <span 
+                      key={index} 
+                      className={`px-3 py-1 rounded-full text-sm ${
+                        userWords.includes(word)
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {word}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              
+              <button 
+                onClick={startGame}
+                className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg font-medium"
+              >
+                Play Again
+              </button>
+            </div>
+          )}
+        </>
+      )}
+      
+      <div className="mt-8 p-4 bg-gray-100 rounded-lg max-w-md">
+        <h3 className="font-bold mb-2">How to Play:</h3>
+        <ul className="list-disc pl-5">
+          <li>Click on letters to form words (minimum 3 letters)</li>
+          <li>Words must be related to cooking, food, or kitchen terms</li>
+          <li>Submit as many valid words as you can before time runs out</li>
+          <li>Longer words earn more points</li>
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+// Ingredient Match Game Component
+const IngredientMatchGame: React.FC = () => {
+  const [cards, setCards] = useState<Array<{id: number, ingredient: string, flipped: boolean, matched: boolean}>>([]);
+  const [flippedCards, setFlippedCards] = useState<number[]>([]);
+  const [moves, setMoves] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [matchedPairs, setMatchedPairs] = useState(0);
+  const [timer, setTimer] = useState(0);
+  
+  // Ingredient pairs
+  const ingredients = [
+    '🍅', '🥕', '🥦', '🍆', '🌽', '🥔', '🥑', '🍎', 
+    '🧄', '🧅', '🌶️', '🥬'
+  ];
+  
+  // Initialize game
+  const startGame = () => {
+    // Create pairs of ingredients
+    const cardPairs = [...ingredients.slice(0, 8)].flatMap(ingredient => [
+      { id: Math.random(), ingredient, flipped: false, matched: false },
+      { id: Math.random(), ingredient, flipped: false, matched: false }
+    ]);
+    
+    // Shuffle cards
+    const shuffledCards = cardPairs.sort(() => Math.random() - 0.5);
+    
+    setCards(shuffledCards);
+    setFlippedCards([]);
+    setMoves(0);
+    setGameOver(false);
+    setGameStarted(true);
+    setMatchedPairs(0);
+    setTimer(0);
+  };
+  
+  // Handle card click
+  const handleCardClick = (index: number) => {
+    // Ignore click if card is already flipped or matched
+    if (cards[index].flipped || cards[index].matched) return;
+    
+    // Ignore if already two cards flipped
+    if (flippedCards.length === 2) return;
+    
+    // Flip card
+    const newCards = [...cards];
+    newCards[index].flipped = true;
+    setCards(newCards);
+    
+    // Add to flipped cards
+    const newFlippedCards = [...flippedCards, index];
+    setFlippedCards(newFlippedCards);
+    
+    // Check for match if two cards flipped
+    if (newFlippedCards.length === 2) {
+      setMoves(prev => prev + 1);
+      
+      const [firstIndex, secondIndex] = newFlippedCards;
+      const firstCard = newCards[firstIndex];
+      const secondCard = newCards[secondIndex];
+      
+      if (firstCard.ingredient === secondCard.ingredient) {
+        // Match found
+        newCards[firstIndex].matched = true;
+        newCards[secondIndex].matched = true;
+        setCards(newCards);
+        setFlippedCards([]);
+        setMatchedPairs(prev => {
+          const newMatchedPairs = prev + 1;
+          // Check for game over
+          if (newMatchedPairs === 8) {
+            setGameOver(true);
+          }
+          return newMatchedPairs;
+        });
+      } else {
+        // No match, flip back after delay
+        setTimeout(() => {
+          newCards[firstIndex].flipped = false;
+          newCards[secondIndex].flipped = false;
+          setCards(newCards);
+          setFlippedCards([]);
+        }, 1000);
+      }
+    }
+  };
+  
+  // Timer
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (gameStarted && !gameOver) {
+      interval = setInterval(() => {
+        setTimer(prev => prev + 1);
+      }, 1000);
+    }
+    
+    return () => clearInterval(interval);
+  }, [gameStarted, gameOver]);
+  
+  return (
+    <div className="flex flex-col items-center my-8">
+      <h2 className="text-2xl font-bold mb-4">Ingredient Match</h2>
+      
+      {!gameStarted ? (
+        <div className="text-center mb-8">
+          <p className="text-gray-700 mb-6">
+            Test your memory by matching pairs of ingredients. Find all pairs with the fewest moves possible!
+          </p>
+          <button 
+            onClick={startGame}
+            className="bg-pink-500 hover:bg-pink-600 text-white px-8 py-3 rounded-lg font-medium"
+          >
+            Start Game
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="w-full max-w-lg">
+            <div className="flex justify-between mb-4">
+              <div className="text-lg font-semibold">
+                Moves: {moves}
+              </div>
+              <div className="text-lg font-semibold">
+                Time: {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')}
+              </div>
+              <div className="text-lg font-semibold">
+                Pairs: {matchedPairs}/8
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 gap-3 mx-auto">
+              {cards.map((card, index) => (
+                <div 
+                  key={card.id} 
+                  onClick={() => handleCardClick(index)}
+                  className={`
+                    aspect-square flex items-center justify-center 
+                    text-3xl rounded-lg shadow-sm cursor-pointer transition-all
+                    ${card.flipped || card.matched ? 'bg-white' : 'bg-pink-100'} 
+                    ${card.matched ? 'bg-green-100' : ''}
+                    ${!card.flipped && !card.matched ? 'hover:bg-pink-200' : ''}
+                  `}
+                >
+                  {(card.flipped || card.matched) ? card.ingredient : ''}
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {gameOver && (
+            <div className="text-center mt-8">
+              <h3 className="text-xl font-bold mb-2">Congratulations! 🎉</h3>
+              <p className="text-lg mb-4">
+                You completed the game in {moves} moves and {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')} time!
+              </p>
+              <button 
+                onClick={startGame}
+                className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded-lg font-medium"
+              >
+                Play Again
+              </button>
+            </div>
+          )}
+        </>
+      )}
+      
+      <div className="mt-8 p-4 bg-gray-100 rounded-lg max-w-md">
+        <h3 className="font-bold mb-2">How to Play:</h3>
+        <ul className="list-disc pl-5">
+          <li>Click on cards to flip them and reveal ingredients</li>
+          <li>Try to find matching pairs of ingredients</li>
+          <li>Match all pairs to win the game</li>
+          <li>Challenge yourself to finish with fewer moves and less time</li>
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+// Food Trivia Game Component
+const FoodTriviaGame: React.FC = () => {
+  const [currentQuestion, setCurrentQuestion] = useState<number>(0);
+  const [score, setScore] = useState<number>(0);
+  const [showScore, setShowScore] = useState<boolean>(false);
+  const [gameStarted, setGameStarted] = useState<boolean>(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [answerResult, setAnswerResult] = useState<'correct' | 'incorrect' | null>(null);
+  
+  // Food trivia questions
+  const questions = [
+    {
+      question: "Which fruit is known as the 'king of fruits'?",
+      options: ["Durian", "Mango", "Jackfruit", "Dragon Fruit"],
+      answer: "Durian"
+    },
+    {
+      question: "What is the main ingredient in traditional guacamole?",
+      options: ["Tomato", "Avocado", "Onion", "Lime"],
+      answer: "Avocado"
+    },
+    {
+      question: "Which spice is the world's most expensive by weight?",
+      options: ["Vanilla", "Cardamom", "Saffron", "Truffle"],
+      answer: "Saffron"
+    },
+    {
+      question: "What food is traditionally eaten on Shrove Tuesday?",
+      options: ["Donuts", "Pancakes", "Waffles", "Crepes"],
+      answer: "Pancakes"
+    },
+    {
+      question: "Which Italian cheese is traditionally used in a classic Tiramisu?",
+      options: ["Ricotta", "Mascarpone", "Mozzarella", "Parmesan"],
+      answer: "Mascarpone"
+    },
+    {
+      question: "Which popular vegetable is actually a fruit?",
+      options: ["Carrot", "Potato", "Tomato", "Broccoli"],
+      answer: "Tomato"
+    },
+    {
+      question: "What is the main ingredient in hummus?",
+      options: ["Lentils", "Chickpeas", "Black Beans", "Split Peas"],
+      answer: "Chickpeas"
+    },
+    {
+      question: "Which nut is used to make marzipan?",
+      options: ["Walnut", "Almond", "Pistachio", "Hazelnut"],
+      answer: "Almond"
+    },
+    {
+      question: "What is the process of slowly cooking food in fat called?",
+      options: ["Blanching", "Braising", "Confit", "Poaching"],
+      answer: "Confit"
+    },
+    {
+      question: "What is Japan's traditional alcoholic beverage made from fermented rice?",
+      options: ["Shochu", "Umeshu", "Sake", "Mirin"],
+      answer: "Sake"
+    }
+  ];
+  
+  // Start game
+  const startGame = () => {
+    setCurrentQuestion(0);
+    setScore(0);
+    setShowScore(false);
+    setGameStarted(true);
+    setSelectedAnswer(null);
+    setAnswerResult(null);
+  };
+  
+  // Handle answer
+  const handleAnswerClick = (selectedOption: string) => {
+    if (answerResult) return; // Prevent multiple answers
+    
+    const isCorrect = selectedOption === questions[currentQuestion].answer;
+    setSelectedAnswer(selectedOption);
+    setAnswerResult(isCorrect ? 'correct' : 'incorrect');
+    
+    if (isCorrect) {
+      setScore(score + 1);
+    }
+    
+    // Move to next question after delay
+    setTimeout(() => {
+      const nextQuestion = currentQuestion + 1;
+      
+      if (nextQuestion < questions.length) {
+        setCurrentQuestion(nextQuestion);
+        setSelectedAnswer(null);
+        setAnswerResult(null);
+      } else {
+        setShowScore(true);
+      }
+    }, 1500);
+  };
+  
+  // Restart game
+  const restartGame = () => {
+    startGame();
+  };
+  
+  return (
+    <div className="flex flex-col items-center my-8">
+      <h2 className="text-2xl font-bold mb-4">Food Trivia</h2>
+      
+      {!gameStarted ? (
+        <div className="text-center mb-8">
+          <p className="text-gray-700 mb-6">
+            Test your culinary knowledge with this food trivia quiz! Answer questions about ingredients, cooking techniques, and food facts.
+          </p>
+          <button 
+            onClick={startGame}
+            className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-3 rounded-lg font-medium"
+          >
+            Start Quiz
+          </button>
+        </div>
+      ) : showScore ? (
+        <div className="text-center w-full max-w-md">
+          <h3 className="text-xl font-bold mb-4">Quiz Complete!</h3>
+          <div className="bg-purple-100 rounded-xl p-8 mb-6">
+            <p className="text-4xl font-bold text-purple-800 mb-2">{score} / {questions.length}</p>
+            <p className="text-gray-700">
+              {score >= 8 ? 'Amazing! You\'re a food expert! 👨‍🍳' : 
+               score >= 5 ? 'Great job! You know your food! 🍽️' : 
+               'Keep learning about food! 🥄'}
+            </p>
+          </div>
+          <button 
+            onClick={restartGame}
+            className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-medium"
+          >
+            Play Again
+          </button>
+        </div>
+      ) : (
+        <div className="w-full max-w-lg">
+          <div className="flex justify-between mb-4">
+            <div className="text-lg font-semibold">
+              Question {currentQuestion + 1} of {questions.length}
+            </div>
+            <div className="text-lg font-semibold">
+              Score: {score}
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h3 className="text-xl font-bold mb-6">
+              {questions[currentQuestion].question}
+            </h3>
+            
+            <div className="space-y-3">
+              {questions[currentQuestion].options.map((option, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleAnswerClick(option)}
+                  disabled={answerResult !== null}
+                  className={`
+                    w-full text-left p-4 rounded-lg transition-colors
+                    ${selectedAnswer === option && answerResult === 'correct' ? 'bg-green-100 border-2 border-green-500' : 
+                      selectedAnswer === option && answerResult === 'incorrect' ? 'bg-red-100 border-2 border-red-500' : 
+                      option === questions[currentQuestion].answer && answerResult === 'incorrect' ? 'bg-green-100 border-2 border-green-500' :
+                      'bg-gray-100 hover:bg-gray-200'}
+                  `}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {answerResult && (
+            <div className={`p-4 rounded-lg mb-6 text-center ${
+              answerResult === 'correct' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
+              <p className="font-semibold">
+                {answerResult === 'correct' ? 'Correct! Well done! ✅' : 'Incorrect! The correct answer is ' + questions[currentQuestion].answer + ' ❌'}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+      
+      <div className="mt-8 p-4 bg-gray-100 rounded-lg max-w-md">
+        <h3 className="font-bold mb-2">How to Play:</h3>
+        <ul className="list-disc pl-5">
+          <li>Read each question carefully</li>
+          <li>Select the answer you think is correct</li>
+          <li>See your results immediately</li>
+          <li>Try to answer all 10 questions correctly</li>
+        </ul>
+      </div>
+    </div>
+  );
+};
+
 // Games Tab Component - Contains both games with game selector
 const GamesTabContent: React.FC = () => {
-  const [selectedGame, setSelectedGame] = useState<'none' | 'snake' | 'tictactoe'>('none');
+  const [selectedGame, setSelectedGame] = useState<'none' | 'snake' | 'tictactoe' | 'wordchef' | 'ingredientmatch' | 'foodtrivia'>('none');
   
   return (
     <div className="min-h-screen pb-20 md:pb-6">
@@ -409,7 +1032,7 @@ const GamesTabContent: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Fun Games</h1>
           
           {selectedGame === 'none' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Snake Game Card */}
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 hover:shadow-md transition-shadow cursor-pointer"
                    onClick={() => setSelectedGame('snake')}>
@@ -449,6 +1072,66 @@ const GamesTabContent: React.FC = () => {
                   Play Tic Tac Toe
                 </button>
               </div>
+              
+              {/* Word Chef Card */}
+              <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-6 hover:shadow-md transition-shadow cursor-pointer"
+                   onClick={() => setSelectedGame('wordchef')}>
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-2xl">🍳</span>
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">Word Chef</h2>
+                </div>
+                <p className="text-gray-700 mb-4">
+                  Create words from a set of letters related to cooking and food. How many can you find?
+                </p>
+                <button 
+                  onClick={() => setSelectedGame('wordchef')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-lg font-medium text-sm transition-colors"
+                >
+                  Play Word Chef
+                </button>
+              </div>
+              
+              {/* Ingredient Match Card */}
+              <div className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-xl p-6 hover:shadow-md transition-shadow cursor-pointer"
+                   onClick={() => setSelectedGame('ingredientmatch')}>
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-2xl">🥕</span>
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">Ingredient Match</h2>
+                </div>
+                <p className="text-gray-700 mb-4">
+                  Find matching pairs of ingredients in this memory card game. Test your memory skills!
+                </p>
+                <button 
+                  onClick={() => setSelectedGame('ingredientmatch')}
+                  className="w-full bg-pink-500 hover:bg-pink-600 text-white py-2 rounded-lg font-medium text-sm transition-colors"
+                >
+                  Play Ingredient Match
+                </button>
+              </div>
+              
+              {/* Food Trivia Card */}
+              <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl p-6 hover:shadow-md transition-shadow cursor-pointer"
+                   onClick={() => setSelectedGame('foodtrivia')}>
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-2xl">🧠</span>
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">Food Trivia</h2>
+                </div>
+                <p className="text-gray-700 mb-4">
+                  Test your culinary knowledge with questions about food, cooking techniques, and cuisines!
+                </p>
+                <button 
+                  onClick={() => setSelectedGame('foodtrivia')}
+                  className="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-lg font-medium text-sm transition-colors"
+                >
+                  Play Food Trivia
+                </button>
+              </div>
             </div>
           ) : (
             <div>
@@ -460,7 +1143,11 @@ const GamesTabContent: React.FC = () => {
                 Back to Games
               </button>
               
-              {selectedGame === 'snake' ? <SnakeGame /> : <TicTacToe />}
+              {selectedGame === 'snake' && <SnakeGame />}
+              {selectedGame === 'tictactoe' && <TicTacToe />}
+              {selectedGame === 'wordchef' && <WordChefGame />}
+              {selectedGame === 'ingredientmatch' && <IngredientMatchGame />}
+              {selectedGame === 'foodtrivia' && <FoodTriviaGame />}
             </div>
           )}
         </div>
@@ -797,6 +1484,14 @@ export const Games: React.FC = () => {
                     </div>
                   </div>
                 ))}
+
+                {/* Placeholder for empty space in grid */}
+                {challenges.length % 3 === 1 && (
+                  <div className="w-full h-20 md:hidden"></div>
+                )}
+                {challenges.length % 3 === 2 && (
+                  <div className="w-full h-20 hidden md:block"></div>
+                )}
               </div>
             </div>
           )}
