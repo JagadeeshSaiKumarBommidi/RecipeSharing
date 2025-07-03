@@ -15,16 +15,6 @@ interface Recipe {
   cookingTime: number;
   difficulty: string;
   category: string;
-  ingredients?: Array<string | {
-    name: string;
-    amount: string;
-    unit: string;
-  }>;
-  steps?: string[];
-  instructions?: Array<{
-    step: number;
-    instruction: string;
-  }>;
   author: {
     _id: string;
     username: string;
@@ -113,10 +103,9 @@ export const Feed: React.FC = () => {
   const [showShareModal, setShowShareModal] = useState<string | null>(null);
   const [savedRecipes, setSavedRecipes] = useState<Set<string>>(new Set());
   
-
   // Sidebar navigation state
   const [rightSidebarView, setRightSidebarView] = useState<'suggestions' | 'popular' | 'recommendations'>('suggestions');
-
+  
   // Data for sidebar views
   const [likedRecipesList, setLikedRecipesList] = useState<Recipe[]>([]);
   const [savedRecipesList, setSavedRecipesList] = useState<Recipe[]>([]);
@@ -124,21 +113,7 @@ export const Feed: React.FC = () => {
   const [popularRecipes, setPopularRecipes] = useState<PopularRecipe[]>([]);
   const [recommendations, setRecommendations] = useState<Recipe[]>([]);
   const [sidebarLoading, setSidebarLoading] = useState(false);
-
-  // Dropdown and modal state
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [viewRecipe, setViewRecipe] = useState<Recipe | null>(null);
-  const [editMode, setEditMode] = useState(false);
-  const [editFormData, setEditFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-    difficulty: '',
-    cookingTime: 0,
-    ingredients: [] as string[],
-    steps: [] as string[]
-  });
-
+  
   const { user } = useAuth();
 
   useEffect(() => {
@@ -174,29 +149,18 @@ export const Feed: React.FC = () => {
 
   const fetchStories = async () => {
     try {
-      console.log('Fetching stories...');
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('No token found for fetching stories');
-        return;
-      }
-      
       const response = await fetch(API_ENDPOINTS.STORIES.FEED, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
       
       if (response.ok) {
         const data = await response.json();
-        console.log('Stories fetched successfully:', data.length);
         setStoryGroups(data);
-      } else {
-        const errorData = await response.json();
-        console.error('Error fetching stories:', response.status, errorData);
       }
     } catch (error) {
-      console.error('Exception while fetching stories:', error);
+      console.error('Error fetching stories:', error);
     }
   };
 
@@ -558,63 +522,6 @@ export const Feed: React.FC = () => {
     }
   };
 
-  const handleUpdateRecipe = async () => {
-    if (!viewRecipe || !editMode) return;
-    
-    try {
-      // Prepare data for backend - convert steps to instructions format if needed
-      const dataToSend = {
-        ...editFormData,
-        // Preserve the original steps array
-        steps: editFormData.steps,
-        // Also create or update instructions array for backend compatibility
-        instructions: editFormData.steps.map((step, index) => ({
-          step: index + 1,
-          instruction: step
-        }))
-      };
-      
-      const response = await fetch(API_ENDPOINTS.RECIPES.UPDATE(viewRecipe._id), {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(dataToSend)
-      });
-      
-      if (response.ok) {
-        const updatedRecipe = await response.json();
-        setRecipes(prev => prev.map(recipe => 
-          recipe._id === updatedRecipe._id ? updatedRecipe : recipe
-        ));
-        setEditMode(false);
-        setViewRecipe(updatedRecipe);
-      }
-    } catch (error) {
-      console.error('Error updating recipe:', error);
-    }
-  };
-
-  const handleDeleteRecipe = async (recipeId: string) => {
-    if (!window.confirm('Are you sure you want to delete this recipe?')) return;
-    
-    try {
-      const response = await fetch(API_ENDPOINTS.RECIPES.DELETE(recipeId), {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (response.ok) {
-        setRecipes(prev => prev.filter(recipe => recipe._id !== recipeId));
-      }
-    } catch (error) {
-      console.error('Error deleting recipe:', error);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -878,70 +785,9 @@ export const Feed: React.FC = () => {
                         <p className="text-sm text-blue-300">@{recipe.author.username}</p>
                       </div>
                     </div>
-                    <div className="relative">
-                      <button
-                        className="p-2 hover:bg-slate-700/50 rounded-full transition-colors"
-                        onClick={() => setOpenDropdown(openDropdown === recipe._id ? null : recipe._id)}
-                      >
-                        <MoreHorizontal className="w-5 h-5 text-blue-300" />
-                      </button>
-                      {openDropdown === recipe._id && (
-                        <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg z-50 border border-slate-200">
-                          <button
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => { 
-                              setViewRecipe(recipe); 
-                              setEditMode(false); 
-                              setOpenDropdown(null); 
-                            }}
-                          >
-                            View Details
-                          </button>
-                          {user && user.id === recipe.author._id && (
-                            <>
-                              <button
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                onClick={() => { 
-                                  setViewRecipe(recipe);
-                                  setEditMode(true);
-                                  
-                                  // Convert any object ingredients to strings for the form
-                                  const ingredientsForForm = recipe.ingredients ? 
-                                    recipe.ingredients.map(ingredient => 
-                                      typeof ingredient === 'string' ? 
-                                        ingredient : 
-                                        `${ingredient.amount} ${ingredient.unit} ${ingredient.name}`
-                                    ) : [];
-                                    
-                                  setEditFormData({
-                                    title: recipe.title,
-                                    description: recipe.description,
-                                    category: recipe.category,
-                                    difficulty: recipe.difficulty,
-                                    cookingTime: recipe.cookingTime,
-                                    ingredients: ingredientsForForm,
-                                    steps: recipe.steps || (recipe.instructions ? 
-                                      recipe.instructions.map(instr => instr.instruction) : [])
-                                  });
-                                  setOpenDropdown(null); 
-                                }}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100"
-                                onClick={() => { 
-                                  handleDeleteRecipe(recipe._id); 
-                                  setOpenDropdown(null); 
-                                }}
-                              >
-                                Delete
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    <button className="p-2 hover:bg-slate-700/50 rounded-full transition-colors">
+                      <MoreHorizontal className="w-5 h-5 text-blue-300" />
+                    </button>
                   </div>
 
                   {/* Media */}
@@ -1302,203 +1148,19 @@ export const Feed: React.FC = () => {
         <CreateStory
           onClose={() => setShowCreateStory(false)}
           onStoryCreated={() => {
-            console.log('Story created callback in Feed - refreshing stories');
             setShowCreateStory(false);
             fetchStories(); // Refresh stories after creating
           }}
         />
       )}
 
-      {/* Recipe Details Modal */}
-      {viewRecipe && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto">
-            <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
-              onClick={() => {
-                setViewRecipe(null);
-                setEditMode(false);
-              }}
-            >
-              &times;
-            </button>
-            
-            {!editMode ? (
-              /* View Mode */
-              <>
-                <h2 className="text-2xl font-bold mb-2">{viewRecipe.title}</h2>
-                <p className="mb-4 text-gray-700">{viewRecipe.description}</p>
-                
-                <div className="mb-2">
-                  <span className="font-semibold">Category:</span> {viewRecipe.category}
-                </div>
-                <div className="mb-2">
-                  <span className="font-semibold">Difficulty:</span> {viewRecipe.difficulty}
-                </div>
-                <div className="mb-2">
-                  <span className="font-semibold">Cooking Time:</span> {viewRecipe.cookingTime} mins
-                </div>
-                
-                {/* Make sure ingredients are displayed */}
-                <div className="mb-2">
-                  <span className="font-semibold">Ingredients:</span>
-                  {viewRecipe.ingredients && viewRecipe.ingredients.length > 0 ? (
-                    <ul className="list-disc pl-6 mt-1">
-                      {viewRecipe.ingredients.map((ingredient, idx) => (
-                        <li key={idx} className="text-gray-700">
-                          {typeof ingredient === 'string' 
-                            ? ingredient 
-                            : `${ingredient.amount} ${ingredient.unit} ${ingredient.name}`}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-500 mt-1">No ingredients listed</p>
-                  )}
-                </div>
-                
-                {/* Make sure steps are displayed */}
-                <div className="mb-2">
-                  <span className="font-semibold">Steps:</span>
-                  {viewRecipe.steps && viewRecipe.steps.length > 0 ? (
-                    <ol className="list-decimal pl-6 mt-1">
-                      {viewRecipe.steps.map((step, idx) => (
-                        <li key={idx} className="text-gray-700 mb-1">{step}</li>
-                      ))}
-                    </ol>
-                  ) : viewRecipe.instructions && viewRecipe.instructions.length > 0 ? (
-                    <ol className="list-decimal pl-6 mt-1">
-                      {viewRecipe.instructions.map((instruction) => (
-                        <li key={instruction.step} className="text-gray-700 mb-1">{instruction.instruction}</li>
-                      ))}
-                    </ol>
-                  ) : (
-                    <p className="text-gray-500 mt-1">No steps listed</p>
-                  )}
-                </div>
-              </>
-            ) : (
-              /* Edit Mode */
-              <div>
-                <h2 className="text-2xl font-bold mb-4">Edit Recipe</h2>
-                
-                <form onSubmit={(e) => { e.preventDefault(); handleUpdateRecipe(); }} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                    <input 
-                      type="text"
-                      value={editFormData.title}
-                      onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <textarea
-                      value={editFormData.description}
-                      onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      rows={3}
-                      required
-                    ></textarea>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                      <select
-                        value={editFormData.category}
-                        onChange={(e) => setEditFormData({...editFormData, category: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        required
-                      >
-                        <option value="Breakfast">Breakfast</option>
-                        <option value="Lunch">Lunch</option>
-                        <option value="Dinner">Dinner</option>
-                        <option value="Dessert">Dessert</option>
-                        <option value="Snack">Snack</option>
-                        <option value="Beverage">Beverage</option>
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
-                      <select
-                        value={editFormData.difficulty}
-                        onChange={(e) => setEditFormData({...editFormData, difficulty: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        required
-                      >
-                        <option value="Easy">Easy</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Hard">Hard</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Cooking Time (minutes)</label>
-                    <input
-                      type="number"
-                      value={editFormData.cookingTime}
-                      onChange={(e) => setEditFormData({...editFormData, cookingTime: parseInt(e.target.value)})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      min="1"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Ingredients (one per line)</label>
-                    <textarea
-                      value={editFormData.ingredients.join('\n')}
-                      onChange={(e) => {
-                        const ingredients = e.target.value.split('\n').filter(i => i.trim() !== '');
-                        setEditFormData({...editFormData, ingredients});
-                      }}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      placeholder="Enter each ingredient on a new line"
-                    ></textarea>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Steps (one per line)</label>
-                    <textarea
-                      value={editFormData.steps.join('\n')}
-                      onChange={(e) => {
-                        const steps = e.target.value.split('\n').filter(s => s.trim() !== '');
-                        setEditFormData({...editFormData, steps});
-                      }}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      placeholder="Enter each step on a new line"
-                    ></textarea>
-                  </div>
-                  
-                  <div className="border-t border-gray-200 pt-4 mt-4 flex justify-end space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => setEditMode(false)}
-                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                      Save Changes
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Floating Story Button (Mobile) */}
+      <button
+        onClick={() => setShowCreateStory(true)}
+        className="lg:hidden fixed bottom-20 right-4 z-10 w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg hover:scale-110 transition-all flex items-center justify-center"
+      >
+        <Plus className="w-6 h-6" />
+      </button>
     </div>
   );
 };
