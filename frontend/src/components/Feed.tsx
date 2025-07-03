@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react';
+// ...existing code...
 import { Heart, MessageCircle, Share, Bookmark, MoreHorizontal, User, Clock, Users, Trophy, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Stories } from './Stories';
 import { StoryRing } from './StoryRing';
 import { CreateStory } from './CreateStory';
 import { API_ENDPOINTS } from '../config/api';
+import { RecipeDetailsModal } from './RecipeDetailsModal';
+
+interface Ingredient {
+  name: string;
+  amount: string;
+  unit: string;
+}
+
+interface Instruction {
+  step: number;
+  instruction: string;
+}
 
 interface Recipe {
   _id: string;
@@ -30,6 +43,8 @@ interface Recipe {
   }>;
   createdAt: string;
   isSaved?: boolean;
+  ingredients: Ingredient[];
+  instructions: Instruction[];
 }
 
 interface StoryGroup {
@@ -91,6 +106,8 @@ interface PopularRecipe {
 }
 
 export const Feed: React.FC = () => {
+  // ...existing state...
+  const [expandedComments, setExpandedComments] = useState<{ [key: string]: boolean }>({});
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({});
@@ -102,10 +119,10 @@ export const Feed: React.FC = () => {
   // Removed userStats state as Your Stats section is no longer used
   const [showShareModal, setShowShareModal] = useState<string | null>(null);
   const [savedRecipes, setSavedRecipes] = useState<Set<string>>(new Set());
-  
+
   // Sidebar navigation state
   const [rightSidebarView, setRightSidebarView] = useState<'suggestions' | 'popular' | 'recommendations'>('suggestions');
-  
+
   // Data for sidebar views
   const [likedRecipesList, setLikedRecipesList] = useState<Recipe[]>([]);
   const [savedRecipesList, setSavedRecipesList] = useState<Recipe[]>([]);
@@ -113,8 +130,30 @@ export const Feed: React.FC = () => {
   const [popularRecipes, setPopularRecipes] = useState<PopularRecipe[]>([]);
   const [recommendations, setRecommendations] = useState<Recipe[]>([]);
   const [sidebarLoading, setSidebarLoading] = useState(false);
-  
+
   const { user } = useAuth();
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [detailsRecipe, setDetailsRecipe] = useState<Recipe | null>(null);
+
+  // Dropdown menu state for 3-dots
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (openMenuId === null) return;
+    function handleClickOutside(event: MouseEvent) {
+      // Close menu if click is outside any menu
+      const menuElements = document.querySelectorAll('.recipe-menu-dropdown');
+      let clickedInside = false;
+      menuElements.forEach((el) => {
+        if (el.contains(event.target as Node)) {
+          clickedInside = true;
+        }
+      });
+      if (!clickedInside) setOpenMenuId(null);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openMenuId]);
 
   useEffect(() => {
     fetchRecipes();
@@ -522,6 +561,114 @@ export const Feed: React.FC = () => {
     }
   };
 
+  const handleOpenDetails = (recipe: Recipe) => {
+    setDetailsRecipe(recipe);
+    setShowDetailsModal(true);
+    setEditingRecipe(null);
+    setEditForm(null);
+    setEditError(null);
+  };
+
+  const handleCloseDetails = () => {
+    setShowDetailsModal(false);
+    setDetailsRecipe(null);
+  };
+
+  interface EditForm {
+    title: string;
+    description: string;
+    cookingTime: number;
+    difficulty: string;
+    category: string;
+  }
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+  const [editForm, setEditForm] = useState<EditForm | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
+
+  const handleEditRecipe = (recipe: Recipe) => {
+    setEditingRecipe(recipe);
+    setEditForm({
+      title: recipe.title,
+      description: recipe.description,
+      cookingTime: recipe.cookingTime,
+      difficulty: recipe.difficulty,
+      category: recipe.category,
+    });
+    setEditError(null);
+  };
+
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (!editForm) return;
+    const { name, value } = e.target;
+    setEditForm({
+      ...editForm,
+      [name]: name === 'cookingTime' ? Number(value) : value,
+    } as EditForm);
+  };
+
+  const handleEditFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRecipe) return;
+    setEditLoading(true);
+    setEditError(null);
+    try {
+      const res = await fetch(API_ENDPOINTS.RECIPES.UPDATE(editingRecipe._id), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(editForm)
+      });
+      if (!res.ok) throw new Error('Failed to update recipe');
+      const updated = await res.json();
+      setRecipes(prev => prev.map(r => r._id === updated._id ? { ...r, ...updated } : r));
+      setEditingRecipe(null);
+      setShowDetailsModal(false);
+      setDetailsRecipe(null);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setEditError(e.message || 'Failed to update recipe');
+      } else {
+        setEditError('Failed to update recipe');
+      }
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingRecipe(null);
+    setEditForm(null);
+    setEditError(null);
+  };
+
+  const handleDeleteRecipe = async (recipeId: string) => {
+    if (!window.confirm('Are you sure you want to delete this recipe? This action cannot be undone.')) return;
+    try {
+      const response = await fetch(API_ENDPOINTS.RECIPES.DELETE(recipeId), {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (response.ok) {
+        setRecipes(prev => prev.filter(r => r._id !== recipeId));
+        // If modal is open for this recipe, close it
+        if (detailsRecipe && detailsRecipe._id === recipeId) {
+          setShowDetailsModal(false);
+          setDetailsRecipe(null);
+        }
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to delete recipe.');
+      }
+    } catch {
+      alert('An error occurred while deleting the recipe.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -785,9 +932,28 @@ export const Feed: React.FC = () => {
                         <p className="text-sm text-blue-300">@{recipe.author.username}</p>
                       </div>
                     </div>
-                    <button className="p-2 hover:bg-slate-700/50 rounded-full transition-colors">
-                      <MoreHorizontal className="w-5 h-5 text-blue-300" />
-                    </button>
+                    <div className="relative">
+                      <button
+                        className="p-2 hover:bg-slate-700/50 rounded-full transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(openMenuId === recipe._id ? null : recipe._id);
+                        }}
+                        aria-label="Open menu"
+                      >
+                        <MoreHorizontal className="w-5 h-5 text-blue-300" />
+                      </button>
+                      {openMenuId === recipe._id && (
+                        <div className="recipe-menu-dropdown absolute right-0 mt-2 w-36 bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-10">
+                          <button onClick={() => { handleOpenDetails(recipe); setOpenMenuId(null); }} className="block w-full text-left px-4 py-2 text-blue-200 hover:bg-slate-700">View Details</button>
+                          {user?.id === recipe.author._id && (
+                            <>
+                              <button onClick={() => { handleDeleteRecipe(recipe._id); setOpenMenuId(null); }} className="block w-full text-left px-4 py-2 text-red-400 hover:bg-slate-700">Delete</button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Media */}
@@ -868,7 +1034,7 @@ export const Feed: React.FC = () => {
                     {/* Comments */}
                     {recipe.comments.length > 0 && (
                       <div className="mt-4 space-y-3 border-t border-slate-700/50 pt-4">
-                        {recipe.comments.slice(0, 2).map((comment) => (
+                        {(expandedComments[recipe._id] ? recipe.comments : recipe.comments.slice(0, 2)).map((comment) => (
                           <div key={comment._id} className="flex items-start space-x-3">
                             <div className="w-8 h-8 bg-slate-700 rounded-full overflow-hidden">
                               {comment.user.profilePicture ? (
@@ -891,6 +1057,17 @@ export const Feed: React.FC = () => {
                             </div>
                           </div>
                         ))}
+                        {recipe.comments.length > 2 && (
+                          <button
+                            className="text-blue-400 text-xs mt-2 hover:underline"
+                            onClick={() => setExpandedComments(prev => ({
+                              ...prev,
+                              [recipe._id]: !prev[recipe._id]
+                            }))}
+                          >
+                            {expandedComments[recipe._id] ? 'View less comments' : `View all comments (${recipe.comments.length})`}
+                          </button>
+                        )}
                       </div>
                     )}
 
@@ -1151,6 +1328,38 @@ export const Feed: React.FC = () => {
             setShowCreateStory(false);
             fetchStories(); // Refresh stories after creating
           }}
+        />
+      )}
+
+      {/* Recipe Details Modal */}
+      {showDetailsModal && detailsRecipe && (
+        <RecipeDetailsModal
+          isOpen={showDetailsModal}
+          onClose={handleCloseDetails}
+          recipe={{
+            title: detailsRecipe.title,
+            description: detailsRecipe.description,
+            images: detailsRecipe.images,
+            ingredients: detailsRecipe.ingredients,
+            instructions: detailsRecipe.instructions,
+            author: {
+              fullName: detailsRecipe.author.fullName,
+              username: detailsRecipe.author.username,
+            },
+            cookingTime: detailsRecipe.cookingTime,
+            difficulty: detailsRecipe.difficulty,
+            category: detailsRecipe.category,
+          }}
+          canEdit={user?.id === detailsRecipe.author._id}
+          onEdit={() => handleEditRecipe(detailsRecipe)}
+          onDelete={() => handleDeleteRecipe(detailsRecipe._id)}
+          editingRecipe={editingRecipe ?? undefined}
+          editForm={editForm ?? undefined}
+          editError={editError}
+          editLoading={editLoading}
+          onEditFormChange={handleEditFormChange}
+          onEditFormSubmit={handleEditFormSubmit}
+          onCancelEdit={handleCancelEdit}
         />
       )}
 
