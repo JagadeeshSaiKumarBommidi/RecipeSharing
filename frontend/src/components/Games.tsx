@@ -51,11 +51,24 @@ const SnakeGame: React.FC = () => {
   
   // Create random food position
   const createFood = useCallback(() => {
-    return {
-      x: Math.floor(Math.random() * (CANVAS_SIZE.width / SCALE)) * SCALE,
-      y: Math.floor(Math.random() * (CANVAS_SIZE.height / SCALE)) * SCALE
-    };
-  }, [CANVAS_SIZE.height, CANVAS_SIZE.width, SCALE]);
+    // Create a grid position that doesn't overlap with the snake
+    let newFoodPosition: { x: number; y: number };
+    let overlapsWithSnake: boolean;
+    
+    do {
+      newFoodPosition = {
+        x: Math.floor(Math.random() * (CANVAS_SIZE.width / SCALE)) * SCALE,
+        y: Math.floor(Math.random() * (CANVAS_SIZE.height / SCALE)) * SCALE
+      };
+      
+      // Check if this position overlaps with any part of the snake
+      overlapsWithSnake = snake.some(segment => 
+        segment.x === newFoodPosition.x && segment.y === newFoodPosition.y
+      );
+    } while (overlapsWithSnake);
+    
+    return newFoodPosition;
+  }, [CANVAS_SIZE.height, CANVAS_SIZE.width, SCALE, snake]);
   
   // Initialize game
   useEffect(() => {
@@ -73,7 +86,10 @@ const SnakeGame: React.FC = () => {
       }
     }, 100);
     
-    setFood(createFood());
+    // Only set food position if it hasn't been set yet (first render)
+    if (food.x === 0 && food.y === 0) {
+      setFood(createFood());
+    }
     
     const handleKeyDown = (e: KeyboardEvent) => {
       // Prevent opposite directions
@@ -101,7 +117,7 @@ const SnakeGame: React.FC = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [createFood, direction, CANVAS_SIZE.width, CANVAS_SIZE.height]);
+  }, [createFood, direction, CANVAS_SIZE.width, CANVAS_SIZE.height, food.x, food.y]);
   
   // Game loop
   useEffect(() => {
@@ -187,19 +203,24 @@ const SnakeGame: React.FC = () => {
   }, [snake, food, direction, gameOver, createFood, isPaused, CANVAS_SIZE.height, CANVAS_SIZE.width, SCALE, speed]);
   
   const resetGame = () => {
-    setSnake([
+    const initialSnake = [
       { x: 200, y: 200 },
       { x: 190, y: 200 },
       { x: 180, y: 200 },
       { x: 170, y: 200 },
       { x: 160, y: 200 },
-    ]);
+    ];
+    setSnake(initialSnake);
     setDirection("RIGHT");
-    setFood(createFood());
     setGameOver(false);
     setScore(0);
     setSpeed(100);
     setIsPaused(false);
+    
+    // Create new food position after resetting snake to avoid overlap
+    setTimeout(() => {
+      setFood(createFood());
+    }, 10);
   };
   
   return (
