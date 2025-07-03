@@ -7,6 +7,7 @@ const router = express.Router();
 // Get conversations
 router.get('/conversations', async (req, res) => {
   try {
+    // Get all conversations
     const conversations = await Conversation.find({
       participants: req.user._id
     })
@@ -14,9 +15,33 @@ router.get('/conversations', async (req, res) => {
     .populate('lastMessage')
     .sort({ lastActivity: -1 });
 
-    res.json(conversations);
+    // Add unread count for each conversation
+    const conversationsWithUnread = await Promise.all(conversations.map(async (conversation) => {
+      // Find the other participant
+      const otherParticipant = conversation.participants.find(
+        p => p._id.toString() !== req.user._id.toString()
+      );
+      
+      if (!otherParticipant) return conversation;
+      
+      // Count unread messages from this participant
+      const unreadCount = await Message.countDocuments({
+        sender: otherParticipant._id,
+        recipient: req.user._id,
+        isRead: false
+      });
+      
+      // Convert to a plain object so we can add properties
+      const convObj = conversation.toObject();
+      convObj.unreadCount = unreadCount;
+      
+      return convObj;
+    }));
+
+    res.json(conversationsWithUnread);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching conversations' });
+    console.error('Error fetching conversations:', error);
+    res.status(500).json({ message: 'Error fetching conversations', error: error.message });
   }
 });
 

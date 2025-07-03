@@ -1,9 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MessageCircle, Send, Search, User, ArrowLeft } from 'lucide-react';
 import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 import { API_ENDPOINTS, SOCKET_URL_CONFIG } from '../config/api';
+
+interface Participant {
+  _id: string;
+  username: string;
+  fullName: string;
+  profilePicture?: string;
+}
+
+interface Conversation {
+  _id: string;
+  participants: Participant[];
+  lastMessage?: string;
+  lastActivity?: string;
+  unreadCount?: number;
+}
 
 interface Message {
   _id: string;
@@ -28,6 +43,17 @@ interface Friend {
   username: string;
   fullName: string;
   profilePicture?: string;
+  unreadCount?: number; // Add unread message count
+}
+
+// Enhanced User type that extends the base User from AuthContext but adds fields needed for chat
+interface ChatUser {
+  _id: string;  // Using id from AuthContext as _id
+  id: string;
+  username: string;
+  fullName: string;
+  profilePicture?: string;
+  email?: string;
 }
 
 const Chat: React.FC = () => {
@@ -38,36 +64,134 @@ const Chat: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [socket, setSocket] = useState<Socket | null>(null);
   const { user } = useAuth();
+  
+  // Create a chat-compatible user object from auth user with useMemo
+  const chatUser = useMemo<ChatUser | null>(() => {
+    if (!user) return null;
+    return {
+      _id: user.id,
+      id: user.id,
+      username: user.username,
+      fullName: user.fullName,
+      profilePicture: user.profilePicture,
+      email: user.email
+    };
+  }, [user]);
 
   useEffect(() => {
     fetchFriends();
     
-    // Initialize socket connection
-    const newSocket = io(SOCKET_URL_CONFIG);
-    setSocket(newSocket);
+    // Only initialize socket if user is logged in
+    if (chatUser?._id) {
+      // Initialize socket connection
+      const newSocket = io(SOCKET_URL_CONFIG, {
+        transports: ['websocket', 'polling'],
+        withCredentials: true,
+        autoConnect: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+      });
+      
+      // Connect and authenticate
+      newSocket.on('connect', () => {
+        console.log('Socket connected:', newSocket.id);
+        newSocket.emit('join', chatUser._id);
+      });
+      
+      newSocket.on('error', (error) => {
+        console.error('Socket connection error:', error);
+      });
 
-    newSocket.emit('join', user?.id);
+      newSocket.on('newMessage', (data) => {
+        console.log('New message received:', data);
+        // Ensure we have the correct friend object when receiving a message
+        if (data.senderId && data.senderId !== chatUser._id) {
+          // Try to find the friend in our list
+          const messageSender = friends.find(f => f._id === data.senderId);
+          
+          if (messageSender) {
+            setMessages(prev => [...prev, {
+              _id: Date.now().toString(),
+              sender: messageSender,
+              recipient: {
+                _id: chatUser._id,
+                username: chatUser.username,
+                fullName: chatUser.fullName,
+                profilePicture: chatUser.profilePicture
+              },
+              message: data.message,
+              createdAt: new Date().toISOString()
+            }]);
+          }
+        }
+      });
 
-    newSocket.on('newMessage', (data) => {
-      setMessages(prev => [...prev, {
-        _id: Date.now().toString(),
-        sender: data.senderId === user?.id ? user : selectedFriend,
-        recipient: data.senderId === user?.id ? selectedFriend : user,
-        message: data.message,
-        createdAt: data.timestamp
-      } as Message]);
-    });
+      setSocket(newSocket);
 
-    return () => {
-      newSocket.close();
-    };
-  }, [user, selectedFriend]);
+      return () => {
+        console.log('Disconnecting socket');
+        newSocket.disconnect();
+      };
+    }
+  }, [chatUser, friends]);
 
   useEffect(() => {
     if (selectedFriend) {
       fetchMessages(selectedFriend._id);
     }
   }, [selectedFriend]);
+
+  // Count unread messages
+  const countUnreadMessages = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.CHAT.CONVERSATIONS, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      if (response.ok) {
+        const conversations: Conversation[] = await response.json();
+        // Update unread counts in friend list
+        setFriends(prevFriends => 
+          prevFriends.map(friend => {
+            const conversation = conversations.find((c) => 
+              c.participants.some((p) => p._id === friend._id)
+            );
+            return {
+              ...friend,
+              unreadCount: conversation?.unreadCount || 0
+            };
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching unread message counts:', error);
+    }
+  };
+
+  // Listen for socket events
+  useEffect(() => {
+    if (!socket) return;
+
+    // Handle connection status
+    socket.on('connectionStatus', (data) => {
+      console.log('Connection status:', data);
+      if (data.status === 'connected') {
+        // Once connected, fetch conversations to get unread counts
+        countUnreadMessages();
+      }
+    });
+
+    // Handle message delivery confirmation
+    socket.on('messageDelivered', (data) => {
+      console.log('Message delivered:', data);
+    });
+
+    return () => {
+      socket.off('connectionStatus');
+      socket.off('messageDelivered');
+    };
+  }, [socket]);
 
   const fetchFriends = async () => {
     try {
@@ -87,26 +211,36 @@ const Chat: React.FC = () => {
 
   const fetchMessages = async (friendId: string) => {
     try {
+      setLoading(true);
       const response = await fetch(`${API_ENDPOINTS.CHAT.MESSAGES}/${friendId}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
       }
+      
+      const data = await response.json();
+      setMessages(data);
+      
+      // Mark messages as read
+      fetch(`${API_ENDPOINTS.CHAT.READ(friendId)}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      }).catch(err => console.error('Error marking messages as read:', err));
     } catch (error) {
       console.error('Error fetching messages:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedFriend) {
-      console.log('No message or no friend selected');
+    if (!newMessage.trim() || !selectedFriend || !chatUser?._id) {
       return;
     }
 
     try {
-      console.log('Sending message:', newMessage, 'to', selectedFriend._id);
       const response = await fetch(API_ENDPOINTS.CHAT.SEND, {
         method: 'POST',
         headers: {
@@ -119,26 +253,31 @@ const Chat: React.FC = () => {
         })
       });
 
-      if (response.ok) {
-        const sentMessage = await response.json();
-        setMessages(prev => [...prev, sentMessage]);
-        setNewMessage('');
-        console.log('Message sent successfully:', sentMessage);
-        // Send through socket for real-time delivery
-        if (socket) {
-          socket.emit('sendMessage', {
-            recipientId: selectedFriend._id,
-            message: newMessage,
-            senderId: user?.id
-          });
-          console.log('Message sent through socket');
-        }
-      } else {
+      if (!response.ok) {
         const errorText = await response.text();
-        console.error('API error:', errorText);
+        throw new Error(`Failed to send message: ${errorText}`);
+      }
+
+      const sentMessage = await response.json();
+      
+      // Update local messages immediately
+      setMessages(prev => [...prev, sentMessage]);
+      setNewMessage('');
+
+      // Send through socket for real-time delivery
+      if (socket?.connected) {
+        socket.emit('sendMessage', {
+          recipientId: selectedFriend._id,
+          message: newMessage,
+          senderId: chatUser._id
+        });
+      } else {
+        console.warn('Socket not connected. Message sent via API only.');
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      // Show error to user
+      alert('Failed to send message. Please try again.');
     }
   };
 
@@ -221,6 +360,12 @@ const Chat: React.FC = () => {
                         <div className="flex-1 text-left min-w-0">
                           <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">{friend.fullName}</h3>
                           <p className="text-xs sm:text-sm text-gray-500 truncate">@{friend.username}</p>
+                          {/* Unread message count */}
+                          {friend.unreadCount && friend.unreadCount > 0 && (
+                            <span className="inline-block bg-orange-500 text-white rounded-full px-3 py-0.5 text-xs font-semibold ml-2">
+                              {friend.unreadCount}
+                            </span>
+                          )}
                         </div>
                       </button>
                     ))}

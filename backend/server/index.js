@@ -63,20 +63,29 @@ const getNetworkIPs = () => {
   return results;
 };
 
+// Allow all origins in development, but only specific ones in production
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? [
+      process.env.CLIENT_URL || 'https://recipe-sharing-frontend.onrender.com',
+      'https://recipe-sharing-frontend.onrender.com',
+      'https://recipe-sharing-frontend.vercel.app'
+    ]
+  : ['http://localhost:5173', 'http://127.0.0.1:5173', ...getNetworkIPs()];
+
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", // TEMPORARY: Allow all origins for testing
+    origin: process.env.NODE_ENV === 'production' ? allowedOrigins : '*', 
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    credentials: false // Must be false when origin is "*"
+    credentials: true
   }
 });
 
 // Middleware
 app.use(cors({
-  origin: "*", // TEMPORARY: Allow all origins for testing
-  credentials: false // Must be false when origin is "*"
+  origin: process.env.NODE_ENV === 'production' ? allowedOrigins : '*',
+  credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -151,34 +160,69 @@ io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
   socket.on('join', (userId) => {
-    connectedUsers.set(userId, socket.id);
-    socket.userId = userId;
+    if (userId) {
+      console.log(`User ${userId} joined with socket ${socket.id}`);
+      connectedUsers.set(userId, socket.id);
+      socket.userId = userId;
+      socket.join(`user:${userId}`); // Join a room specific to this user
+      
+      // Notify the user they're connected
+      socket.emit('connectionStatus', { 
+        status: 'connected', 
+        userId, 
+        socketId: socket.id 
+      });
+    } else {
+      console.log('Join event received without userId');
+    }
   });
 
   socket.on('sendMessage', async (data) => {
     try {
       const { recipientId, message, senderId } = data;
+      
+      if (!recipientId || !message || !senderId) {
+        socket.emit('messageError', { error: 'Missing required fields' });
+        return;
+      }
+      
+      console.log(`Message from ${senderId} to ${recipientId}: ${message.substring(0, 30)}${message.length > 30 ? '...' : ''}`);
+      
       const recipientSocketId = connectedUsers.get(recipientId);
       
       if (recipientSocketId) {
+        console.log(`Recipient ${recipientId} is online with socket ${recipientSocketId}`);
         io.to(recipientSocketId).emit('newMessage', {
           senderId,
           message,
-          timestamp: new Date()
+          timestamp: new Date().toISOString()
+        });
+        socket.emit('messageDelivered', { 
+          recipientId, 
+          status: 'delivered',
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        console.log(`Recipient ${recipientId} is offline - message will be delivered when they connect`);
+        socket.emit('messageDelivered', { 
+          recipientId, 
+          status: 'sent',
+          timestamp: new Date().toISOString()
         });
       }
-      
-      socket.emit('messageSent', { success: true });
     } catch (error) {
+      console.error('Error in sendMessage event:', error);
       socket.emit('messageError', { error: error.message });
     }
   });
 
   socket.on('disconnect', () => {
     if (socket.userId) {
+      console.log(`User ${socket.userId} disconnected`);
       connectedUsers.delete(socket.userId);
+    } else {
+      console.log('Anonymous socket disconnected:', socket.id);
     }
-    console.log('User disconnected:', socket.id);
   });
 });
 

@@ -67,8 +67,10 @@ export const API_ENDPOINTS = {
     REJECT: (userId: string) => `${API_BASE_URL}/api/friends/reject/${userId}`,
   },
   CHAT: {
-    MESSAGES: `${API_BASE_URL}/api/chat`,
-    SEND: `${API_BASE_URL}/api/chat`,
+    CONVERSATIONS: `${API_BASE_URL}/api/chat/conversations`,
+    MESSAGES: `${API_BASE_URL}/api/chat/messages`,
+    SEND: `${API_BASE_URL}/api/chat/send`,
+    READ: (userId: string) => `${API_BASE_URL}/api/chat/read/${userId}`,
   },
   STORIES: {
     FEED: `${API_BASE_URL}/api/stories/feed`,
@@ -84,6 +86,13 @@ export const API_ENDPOINTS = {
 
 // Socket.io URL
 export const SOCKET_URL_CONFIG = SOCKET_URL;
+
+// Debug socket connection
+if (typeof window !== 'undefined') {
+  console.log('📱 Socket configuration:');
+  console.log('- Socket URL:', SOCKET_URL);
+  console.log('- Current location:', window.location.href);
+}
 
 // Default headers for API requests
 export const getAuthHeaders = (token: string) => ({
