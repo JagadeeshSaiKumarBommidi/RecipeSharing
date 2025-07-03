@@ -76,6 +76,7 @@ export const API_ENDPOINTS = {
     FEED: `${API_BASE_URL}/api/stories/feed`,
     CREATE: `${API_BASE_URL}/api/stories`,
     VIEW: (storyId: string) => `${API_BASE_URL}/api/stories/${storyId}/view`,
+    DELETE: (storyId: string) => `${API_BASE_URL}/api/stories/${storyId}`,
   },
   CHALLENGES: {
     CURRENT: `${API_BASE_URL}/api/challenges/current`,

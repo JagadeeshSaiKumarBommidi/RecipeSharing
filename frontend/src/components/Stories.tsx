@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Eye } from 'lucide-react';
+import { X, Eye, Trash2, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_ENDPOINTS } from '../config/api';
 
@@ -10,6 +10,8 @@ interface Story {
   backgroundColor: string;
   textColor: string;
   font: string;
+  fontSize?: number;
+  textAlign?: 'left' | 'center' | 'right';
   author: {
     _id: string;
     username: string;
@@ -55,6 +57,7 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
     font: 'Arial'
   });
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { user } = useAuth();
 
   const backgroundColors = [
@@ -161,6 +164,72 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
       }
     } catch (error) {
       console.error('Error creating story:', error);
+    }
+  };
+
+  const deleteStory = async (storyId: string) => {
+    if (!confirm('Are you sure you want to delete this story?')) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found for deleting story');
+        return;
+      }
+
+      const response = await fetch(API_ENDPOINTS.STORIES.DELETE(storyId), {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        console.log('Story deleted successfully');
+        
+        // Remove the story from the storyGroups
+        const updatedStoryGroups = [...storyGroups];
+        const currentGroup = updatedStoryGroups[currentGroupIndex];
+        
+        // Remove the story from the current group
+        currentGroup.stories = currentGroup.stories.filter(story => story._id !== storyId);
+        
+        // If this was the last story in the group, remove the group
+        if (currentGroup.stories.length === 0) {
+          updatedStoryGroups.splice(currentGroupIndex, 1);
+          
+          // If this was the last group, close the stories view
+          if (updatedStoryGroups.length === 0) {
+            onClose?.();
+            return;
+          }
+          
+          // Adjust currentGroupIndex if needed
+          if (currentGroupIndex >= updatedStoryGroups.length) {
+            setCurrentGroupIndex(updatedStoryGroups.length - 1);
+          }
+        } else {
+          // Adjust currentStoryIndex if needed
+          if (currentStoryIndex >= currentGroup.stories.length) {
+            setCurrentStoryIndex(currentGroup.stories.length - 1);
+          }
+        }
+        
+        setStoryGroups(updatedStoryGroups);
+      } else {
+        const errorData = await response.json();
+        console.error('Error deleting story:', errorData);
+        alert('Failed to delete story: ' + (errorData.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Exception deleting story:', error);
+      alert('Failed to delete story. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -350,27 +419,32 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
             color: currentStory.textColor,
             fontFamily: currentStory.font
           }}
-        >
-          {currentStory.image ? (
-            <div className="relative w-full h-full">
-              <img
-                src={currentStory.image}
-                alt="Story"
-                className="w-full h-full object-cover rounded-lg"
-              />
-              {currentStory.content && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-lg">
-                  <p className="text-white text-xl font-bold text-center p-4">
-                    {currentStory.content}
-                  </p>
+        >              {currentStory.image ? (
+                <div className="relative w-full h-full">
+                  <img
+                    src={currentStory.image}
+                    alt="Story"
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                  {/* Always show text overlay for media stories if content exists */}
+                  {currentStory.content && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg">
+                      <p className="text-white text-xl font-bold text-center p-4 max-w-[90%]"
+                         style={{ 
+                           fontSize: `${currentStory.fontSize || 24}px`,
+                           textAlign: currentStory.textAlign || 'center',
+                           textShadow: '0 1px 3px rgba(0,0,0,0.7)'
+                         }}>
+                        {currentStory.content}
+                      </p>
+                    </div>
+                  )}
                 </div>
+              ) : (
+                <p className="text-2xl leading-relaxed break-words">
+                  {currentStory.content}
+                </p>
               )}
-            </div>
-          ) : (
-            <p className="text-2xl leading-relaxed break-words">
-              {currentStory.content}
-            </p>
-          )}
         </div>
 
         {/* Navigation areas */}
@@ -393,10 +467,36 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
       {/* Story info */}
       {currentStory.author._id === user?.id && (
         <div className="p-6 bg-gradient-to-t from-black via-black/80 to-transparent text-blue-100">
-          <div className="flex items-center space-x-3 bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-blue-600/30">
-            <Eye className="w-5 h-5 text-blue-400" />
-            <span className="font-medium">{currentStory.views.length} views</span>
+          <div className="flex justify-between">
+            <div className="flex items-center space-x-3 bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-blue-600/30">
+              <Eye className="w-5 h-5 text-blue-400" />
+              <span className="font-medium">{currentStory.views.length} views</span>
+            </div>
+            
+            <button 
+              onClick={() => deleteStory(currentStory._id)}
+              className={`flex items-center space-x-2 ${
+                isDeleting ? 'bg-gray-700/50 cursor-not-allowed' : 'bg-red-900/50 hover:bg-red-800/70'
+              } backdrop-blur-sm rounded-xl p-4 border border-red-600/30 transition-colors`}
+              title="Delete this story"
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <AlertTriangle className="w-5 h-5 text-yellow-400 animate-pulse" />
+                  <span className="font-medium hidden sm:inline">Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-5 h-5 text-red-400" />
+                  <span className="font-medium hidden sm:inline">Delete</span>
+                </>
+              )}
+            </button>
           </div>
+          
+          {/* Confirmation if needed */}
+          <p className="text-xs text-center mt-2 text-blue-300/70">You can delete your story at any time</p>
         </div>
       )}
     </div>

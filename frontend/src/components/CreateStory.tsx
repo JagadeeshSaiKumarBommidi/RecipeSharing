@@ -170,14 +170,19 @@ export const CreateStory: React.FC<CreateStoryProps> = ({ onClose, onStoryCreate
   };
 
   const publishStory = async () => {
-    if (!capturedMedia && !text) return;
+    if (!capturedMedia && !text) {
+      console.log('Nothing to publish: no media or text');
+      return;
+    }
     
     setIsLoading(true);
+    console.log('Publishing story...');
     
     try {
       const formData = new FormData();
       
       if (mode === 'text' && text) {
+        console.log('Creating text story with content:', text);
         // For text stories, just send the text and styling
         formData.append('content', text);
         formData.append('backgroundColor', backgroundColor);
@@ -186,6 +191,15 @@ export const CreateStory: React.FC<CreateStoryProps> = ({ onClose, onStoryCreate
         formData.append('textAlign', textAlign);
         formData.append('type', 'text');
       } else if (capturedMedia) {
+        console.log('Creating media story with:', {
+          hasMedia: !!capturedMedia,
+          mediaType,
+          hasText: !!text,
+          textContent: text || 'Check out my story!',
+          fontSize,
+          textAlign
+        });
+        
         // For media stories
         if (capturedMedia.startsWith('data:')) {
           // Convert data URL to blob
@@ -194,23 +208,42 @@ export const CreateStory: React.FC<CreateStoryProps> = ({ onClose, onStoryCreate
           formData.append('media', blob, `story.${mediaType === 'video' ? 'mp4' : 'jpg'}`);
         }
         
-        formData.append('content', text || ''); // Add any text overlay
+        // Make sure user text is properly saved as content
+        const storyContent = text.trim() ? text : 'Check out my story!';
+        console.log('Using story content:', storyContent);
+        formData.append('content', storyContent);
         formData.append('type', 'media');
+        
+        // Also add styling for text on media
+        formData.append('fontSize', fontSize.toString());
+        formData.append('textAlign', textAlign);
+      }
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found. Please log in again.');
       }
       
       const response = await fetch(API_ENDPOINTS.STORIES.CREATE, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: formData
       });
       
       if (response.ok) {
-        onStoryCreated?.();
+        console.log('Story created successfully!');
+        if (typeof onStoryCreated === 'function') {
+          console.log('Calling onStoryCreated callback');
+          onStoryCreated();
+        } else {
+          console.warn('onStoryCreated callback is not defined or not a function');
+        }
         onClose();
       } else {
         const errorData = await response.json();
+        console.error('Server responded with error:', errorData);
         throw new Error(errorData.message || 'Failed to create story');
       }
     } catch (error) {
@@ -395,11 +428,26 @@ export const CreateStory: React.FC<CreateStoryProps> = ({ onClose, onStoryCreate
           {capturedMedia && (
             <div className="flex-1 relative">
               {mediaType === 'photo' ? (
-                <img
-                  src={capturedMedia}
-                  alt="Captured"
-                  className="w-full h-full object-cover"
-                />
+                <div className="relative w-full h-full">
+                  <img
+                    src={capturedMedia}
+                    alt="Captured"
+                    className="w-full h-full object-cover"
+                  />
+                  {text && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <p className="bg-black/40 backdrop-blur-sm px-6 py-3 rounded text-center max-w-[90%] shadow-lg"
+                         style={{
+                           color: textColor,
+                           fontSize: `${fontSize}px`,
+                           textAlign,
+                           textShadow: '0 1px 3px rgba(0,0,0,0.7)'
+                         }}>
+                        {text}
+                      </p>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <video
                   src={capturedMedia}
@@ -407,6 +455,46 @@ export const CreateStory: React.FC<CreateStoryProps> = ({ onClose, onStoryCreate
                   className="w-full h-full object-cover"
                 />
               )}
+              
+              {/* Text overlay input for media */}
+              <div className="absolute top-4 left-4 right-4">
+                <textarea
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Add text to your story..."
+                  className="w-full bg-black/40 text-white rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                />
+                
+                {/* Text styling controls for media */}
+                <div className="flex justify-between mt-2">
+                  <div className="flex space-x-2">
+                    {textColors.slice(0, 4).map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => setTextColor(color)}
+                        className={`w-6 h-6 rounded-full border ${
+                          textColor === color ? 'ring-2 ring-white' : 'border-gray-400'
+                        }`}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex space-x-2">
+                    {(['left', 'center', 'right'] as const).map((align) => (
+                      <button
+                        key={align}
+                        onClick={() => setTextAlign(align)}
+                        className={`px-2 py-1 text-xs rounded ${
+                          textAlign === align ? 'bg-blue-600 text-white' : 'bg-white/20 text-white'
+                        }`}
+                      >
+                        {align.charAt(0).toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
               
               {/* Action Buttons */}
               <div className="absolute bottom-20 left-0 right-0 flex justify-center space-x-6">

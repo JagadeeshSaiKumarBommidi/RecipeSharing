@@ -174,18 +174,29 @@ export const Feed: React.FC = () => {
 
   const fetchStories = async () => {
     try {
+      console.log('Fetching stories...');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found for fetching stories');
+        return;
+      }
+      
       const response = await fetch(API_ENDPOINTS.STORIES.FEED, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
       if (response.ok) {
         const data = await response.json();
+        console.log('Stories fetched successfully:', data.length);
         setStoryGroups(data);
+      } else {
+        const errorData = await response.json();
+        console.error('Error fetching stories:', response.status, errorData);
       }
     } catch (error) {
-      console.error('Error fetching stories:', error);
+      console.error('Exception while fetching stories:', error);
     }
   };
 
@@ -1291,6 +1302,7 @@ export const Feed: React.FC = () => {
         <CreateStory
           onClose={() => setShowCreateStory(false)}
           onStoryCreated={() => {
+            console.log('Story created callback in Feed - refreshing stories');
             setShowCreateStory(false);
             fetchStories(); // Refresh stories after creating
           }}
