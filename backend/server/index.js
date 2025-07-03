@@ -14,7 +14,7 @@ dotenv.config();
 console.log('🔧 Environment Check:');
 console.log('- JWT_SECRET:', process.env.JWT_SECRET ? '✅ Loaded' : '❌ Missing');
 console.log('- MONGODB_URI:', process.env.MONGODB_URI ? '✅ Loaded' : '❌ Missing');
-console.log('- PORT:', process.env.PORT || '5000 (default)');
+console.log('- PORT:', process.env.PORT || '5001 (default)');
 console.log('');
 
 // Now import modules that depend on environment variables
@@ -226,7 +226,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001; // Changed from 5000 to 5001 to avoid port conflict
 const HOST = (process.env.HOST || '0.0.0.0').trim(); // Allow override for network access, trim whitespace
 
 server.listen(PORT, HOST, () => {
