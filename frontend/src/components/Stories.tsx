@@ -83,9 +83,17 @@ export const Stories: React.FC<StoriesProps> = ({ onClose }) => {
 
   useEffect(() => {
     if (storyGroups.length > 0 && currentGroupIndex < storyGroups.length) {
+      // Mark current story as viewed if it exists
+      const currentGroup = storyGroups[currentGroupIndex];
+      if (currentGroup.stories.length > currentStoryIndex) {
+        const currentStory = currentGroup.stories[currentStoryIndex];
+        markAsViewed(currentStory._id);
+      }
+      
+      // Auto advance every 5 seconds
       const timer = setTimeout(() => {
         handleNext();
-      }, 5000); // Auto advance every 5 seconds
+      }, 5000);
 
       return () => clearTimeout(timer);
     }
