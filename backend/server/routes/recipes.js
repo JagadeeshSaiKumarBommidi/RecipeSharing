@@ -60,23 +60,10 @@ router.get('/feed', async (req, res) => {
   }
 });
 
-// Get recipe by ID
-router.get('/:id', async (req, res) => {
-  try {
-    const recipe = await Recipe.findById(req.params.id)
-      .populate('author', 'username fullName profilePicture')
-      .populate('likes.user', 'username fullName')
-      .populate('comments.user', 'username fullName profilePicture');
-    
-    if (!recipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
-    }
-    
-    res.json(recipe);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching recipe' });
-  }
-});
+// NOTE: The route for fetching a single recipe by ID is defined AFTER
+// the more specific routes like '/saved' and '/liked' so that path
+// segments such as 'saved' are not interpreted as an :id parameter.
+// The actual handler for GET /:id is defined at the end of this file.
 
 // Like/Unlike recipe
 router.post('/:id/like', async (req, res) => {
@@ -429,6 +416,25 @@ router.get('/recommendations', async (req, res) => {
   } catch (error) {
     console.error('Error fetching recommendations:', error);
     res.status(500).json({ message: 'Error fetching recommendations' });
+  }
+});
+
+// Get recipe by ID (placed after specific routes to avoid route shadowing)
+router.get('/:id', async (req, res) => {
+  try {
+    const recipe = await Recipe.findById(req.params.id)
+      .populate('author', 'username fullName profilePicture')
+      .populate('likes.user', 'username fullName')
+      .populate('comments.user', 'username fullName profilePicture');
+
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    res.json(recipe);
+  } catch (error) {
+    console.error('Error fetching recipe by id:', error);
+    res.status(500).json({ message: 'Error fetching recipe' });
   }
 });
 
