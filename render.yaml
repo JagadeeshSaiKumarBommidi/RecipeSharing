@@ -6,26 +6,60 @@ services:
     plan: free
     buildCommand: cd backend && npm install
     startCommand: cd backend && npm start
+    # Let Render provide PORT at runtime. Health-check path helps Render know when app is ready:
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
+      - key: CLIENT_URL
+        value: https://recipe-sharing-frontend.onrender.com
+      # The following env vars are provided from Render secrets below
       - key: MONGODB_URI
         fromSecret: MONGODB_URI
       - key: JWT_SECRET
         fromSecret: JWT_SECRET
-      - key: CLIENT_URL
-        value: https://recipe-sharing-frontend.onrender.com
 
   # Frontend Static Site
-  - type: web
+  - type: static
     name: recipe-sharing-frontend
-    env: static
     plan: free
     buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    publishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://recipe-sharing-backend.onrender.com
+      - key: VITE_SOCKET_URL
+        value: https://recipe-sharing-backend.onrender.com
+
+# Declare secret resources (placeholders). Replace the "value" in Render or via Dashboard;
+# do NOT commit real secret values to source control. You can also omit values here and
+# set them directly in the Render Dashboard if preferred.
+secrets:
+  - name: MONGODB_URI
+    value: "<set-in-render-dashboard>"
+  - name: JWT_SECRET
+    value: "<set-in-render-dashboard>"
+services:
+  # Backend API Service
+  - type: web
+    name: recipe-sharing-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    # Let Render provide PORT at runtime. Health-check path helps Render know when app is ready:
+    healthCheckPath: /api/health
+    # IMPORTANT: set the following environment variables in the Render Dashboard for this service:
+    # - MONGODB_URI (your MongoDB connection string)
+    # - JWT_SECRET (strong random secret)
+    # - CLIENT_URL (optional; e.g. https://<front-end-url>.onrender.com)
+
+  # Frontend Static Site
+  - type: static
+    name: recipe-sharing-frontend
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    publishPath: frontend/dist
+    # IMPORTANT: set these env vars in Render Dashboard or via Render UI:
+    # - VITE_API_URL = https://<your-backend-service>.onrender.com
+    # - VITE_SOCKET_URL = https://<your-backend-service>.onrender.com

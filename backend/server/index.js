@@ -64,19 +64,50 @@ const getNetworkIPs = () => {
 };
 
 // Allow all origins in development, but only specific ones in production
+// In production, read CLIENT_URLS (comma-separated) and CLIENT_URL (single fallback) from env
+const getProdOrigins = () => {
+  const origins = [
+    process.env.CLIENT_URL || 'https://recipe-sharing-frontend.onrender.com',
+    'https://recipe-sharing-frontend.onrender.com',
+    'https://recipe-sharing-frontend.vercel.app'
+  ];
+  
+  // Add any comma-separated origins from CLIENT_URLS
+  if (process.env.CLIENT_URLS) {
+    const extraUrls = process.env.CLIENT_URLS.split(',').map(url => url.trim()).filter(Boolean);
+    origins.push(...extraUrls);
+  }
+  
+  // Remove duplicates
+  return [...new Set(origins)];
+};
+
 const allowedOrigins = process.env.NODE_ENV === 'production' 
-  ? [
-      process.env.CLIENT_URL || 'https://recipe-sharing-frontend.onrender.com',
-      'https://recipe-sharing-frontend.onrender.com',
-      'https://recipe-sharing-frontend.vercel.app'
-    ]
+  ? getProdOrigins()
   : ['http://localhost:5173', 'http://127.0.0.1:5173', ...getNetworkIPs()];
+
+console.log('🔐 CORS allowed origins:', allowedOrigins);
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' ? allowedOrigins : '*', 
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      if (process.env.NODE_ENV === 'production') {
+        if (allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          console.warn(`⚠️  CORS blocked origin: ${origin}`);
+          callback(new Error('Not allowed by CORS'));
+        }
+      } else {
+        // In development, allow all origins
+        callback(null, true);
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true
   }
@@ -84,7 +115,22 @@ const io = new Server(server, {
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? allowedOrigins : '*',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (process.env.NODE_ENV === 'production') {
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`⚠️  CORS blocked origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    } else {
+      // In development, allow all origins
+      callback(null, true);
+    }
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
@@ -97,8 +143,19 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/recipe
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ Connected to MongoDB'))
   .catch(err => {
-    console.error('❌ MongoDB connection error:', err);
-    console.error('💡 Make sure MongoDB is running and the connection string is correct');
+    console.error('❌ MongoDB connection error:', err.message);
+    if (process.env.NODE_ENV === 'production') {
+      console.error('');
+      console.error('🚨 PRODUCTION MONGODB ERROR:');
+      console.error('If error mentions "could not connect to any servers", check:');
+      console.error('1. MONGODB_URI secret is set correctly in Render');
+      console.error('2. MongoDB Atlas IP Access List includes Render egress IPs');
+      console.error('   → Go to MongoDB Atlas console → Network Access → Add IP Address');
+      console.error('   → Temporarily add 0.0.0.0/0 for testing (NOT for production)');
+      console.error('3. Database user exists with correct password');
+    } else {
+      console.error('💡 For local dev: make sure MongoDB is running and connection string is correct');
+    }
     process.exit(1);
   });
 
