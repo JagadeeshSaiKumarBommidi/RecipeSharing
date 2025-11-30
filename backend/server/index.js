@@ -66,11 +66,12 @@ const getNetworkIPs = () => {
 // Allow all origins in development, but only specific ones in production
 // In production, read CLIENT_URLS (comma-separated) and CLIENT_URL (single fallback) from env
 const getProdOrigins = () => {
-  const origins = [
-    process.env.CLIENT_URL || 'https://recipe-sharing-frontend.onrender.com',
-    'https://recipe-sharing-frontend.onrender.com',
-    'https://recipe-sharing-frontend.vercel.app'
-  ];
+  const origins = [];
+  
+  // Add explicit CLIENT_URL if set
+  if (process.env.CLIENT_URL) {
+    origins.push(process.env.CLIENT_URL);
+  }
   
   // Add any comma-separated origins from CLIENT_URLS
   if (process.env.CLIENT_URLS) {
@@ -78,8 +79,18 @@ const getProdOrigins = () => {
     origins.push(...extraUrls);
   }
   
-  // Remove duplicates
-  return [...new Set(origins)];
+  // If no env vars set, use common defaults (but these should be overridden)
+  if (origins.length === 0) {
+    console.warn('⚠️  No CLIENT_URL or CLIENT_URLS set in environment. Using defaults.');
+    origins.push(
+      'https://recipesharing-1-18f6.onrender.com',  // Current Render frontend
+      'https://recipe-sharing-frontend.onrender.com', // Common naming pattern
+      'https://recipe-sharing-frontend.vercel.app'   // If using Vercel
+    );
+  }
+  
+  // Remove duplicates and filter empty strings
+  return [...new Set(origins)].filter(Boolean);
 };
 
 const allowedOrigins = process.env.NODE_ENV === 'production' 
