@@ -63,37 +63,43 @@ const getNetworkIPs = () => {
   return results;
 };
 
-// Allow all origins in development, but only specific ones in production
-// In production, read CLIENT_URLS (comma-separated) and CLIENT_URL (single fallback) from env
-const getProdOrigins = () => {
-  const origins = [];
+// Build CORS allowed origins from environment variables
+// ALWAYS use this list regardless of NODE_ENV (permanent solution)
+const getAllowedOrigins = () => {
+  const origins = new Set();
   
-  // Add explicit CLIENT_URL if set
+  // Add development/local origins
+  origins.add('http://localhost:5173');
+  origins.add('http://127.0.0.1:5173');
+  origins.add('http://localhost:4173');
+  origins.add('http://127.0.0.1:4173');
+  
+  // Add local network IPs
+  getNetworkIPs().forEach(ip => origins.add(ip));
+  
+  // Add production origins from environment variables
   if (process.env.CLIENT_URL) {
-    origins.push(process.env.CLIENT_URL);
+    process.env.CLIENT_URL.split(',').forEach(url => {
+      const trimmed = url.trim();
+      if (trimmed) origins.add(trimmed);
+    });
   }
   
-  // Add any comma-separated origins from CLIENT_URLS
   if (process.env.CLIENT_URLS) {
-    const extraUrls = process.env.CLIENT_URLS.split(',').map(url => url.trim()).filter(Boolean);
-    origins.push(...extraUrls);
+    process.env.CLIENT_URLS.split(',').forEach(url => {
+      const trimmed = url.trim();
+      if (trimmed) origins.add(trimmed);
+    });
   }
   
-  // If no env vars set, use common defaults (but these should be overridden)
-  if (origins.length === 0) {
-    console.warn('⚠️  No CLIENT_URL or CLIENT_URLS set in environment. Using defaults.');
-    origins.push(
-      'https://recipesharing-1-18f6.onrender.com'   // Your Render frontend
-    );
-  }
+  // Hardcoded production defaults (fallback if env vars not set)
+  origins.add('https://recipesharing-1-18f6.onrender.com');
+  origins.add('https://recipesharing-frontend.onrender.com');
   
-  // Remove duplicates and filter empty strings
-  return [...new Set(origins)].filter(Boolean);
+  return Array.from(origins).filter(Boolean);
 };
 
-const allowedOrigins = process.env.NODE_ENV === 'production' 
-  ? getProdOrigins()
-  : ['http://localhost:5173', 'http://127.0.0.1:5173', ...getNetworkIPs()];
+const allowedOrigins = getAllowedOrigins();
 
 console.log('🔐 CORS allowed origins:', allowedOrigins);
 
@@ -103,21 +109,19 @@ const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
+      if (!origin) {
+        return callback(null, true);
+      }
       
-      if (process.env.NODE_ENV === 'production') {
-        if (allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          console.warn(`⚠️  CORS blocked origin: ${origin}`);
-          callback(new Error('Not allowed by CORS'));
-        }
-      } else {
-        // In development, allow all origins
+      // Check if origin is in the allowed list
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
+      } else {
+        console.warn(`⚠️  Socket.io CORS blocked: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
       }
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true
   }
 });
@@ -126,21 +130,24 @@ const io = new Server(server, {
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('✅ CORS: Allowed (no origin header)');
+      return callback(null, true);
+    }
     
-    if (process.env.NODE_ENV === 'production') {
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.warn(`⚠️  CORS blocked origin: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
-      }
-    } else {
-      // In development, allow all origins
+    // Check if origin is in the allowed list
+    if (allowedOrigins.includes(origin)) {
+      console.log(`✅ CORS: Allowed origin: ${origin}`);
       callback(null, true);
+    } else {
+      console.warn(`⚠️  CORS blocked: ${origin} (not in allowed list)`);
+      console.log(`💡 Allowed origins: ${allowedOrigins.join(', ')}`);
+      callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
