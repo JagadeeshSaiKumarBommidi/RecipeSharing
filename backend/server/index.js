@@ -83,9 +83,7 @@ const getProdOrigins = () => {
   if (origins.length === 0) {
     console.warn('⚠️  No CLIENT_URL or CLIENT_URLS set in environment. Using defaults.');
     origins.push(
-      'https://recipesharing-1-18f6.onrender.com',  // Current Render frontend
-      'https://recipe-sharing-frontend.onrender.com', // Common naming pattern
-      'https://recipe-sharing-frontend.vercel.app'   // If using Vercel
+      'https://recipesharing-1-18f6.onrender.com'   // Your Render frontend
     );
   }
   
