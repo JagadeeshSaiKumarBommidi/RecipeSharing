@@ -153,6 +153,23 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/uploads', express.static('uploads'));
 
+// Explicit OPTIONS handler for all routes (handles preflight)
+app.options('*', (req, res) => {
+  const origin = req.headers.origin;
+  console.log(`📋 OPTIONS preflight request from: ${origin}`);
+  
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.sendStatus(200);
+  } else {
+    console.warn(`⚠️  OPTIONS blocked: ${origin}`);
+    res.sendStatus(403);
+  }
+});
+
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/recipesharing';
 
