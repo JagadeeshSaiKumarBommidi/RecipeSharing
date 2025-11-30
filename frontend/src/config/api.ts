@@ -5,16 +5,16 @@ const isDevelopment = typeof window !== 'undefined' && (window.location.hostname
 
 // Force production backend URL when on Render
 const API_BASE_URL = isRenderProduction 
-  ? 'https://recipesharing-3.onrender.com'
+  ? 'https://recipesharing-amop.onrender.com'  // Updated to match actual Render URL
   : isDevelopment 
     ? (import.meta.env.VITE_API_URL || 'http://localhost:5001')
-    : 'https://recipesharing-3.onrender.com'; // Default to production
+    : 'https://recipesharing-amop.onrender.com'; // Default to production
 
 const SOCKET_URL = isRenderProduction 
-  ? 'https://recipesharing-3.onrender.com'
+  ? 'https://recipesharing-amop.onrender.com'  // Updated to match actual Render URL
   : isDevelopment 
     ? (import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001')
-    : 'https://recipesharing-3.onrender.com'; // Default to production
+    : 'https://recipesharing-amop.onrender.com'; // Default to production
 
 // Debug logging in development and production
 console.log('🔧 API Configuration (ENHANCED DEBUG):');
