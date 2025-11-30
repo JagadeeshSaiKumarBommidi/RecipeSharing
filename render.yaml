@@ -25,9 +25,9 @@ services:
     publishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
-        value: https://recipesharing-3.onrender.com
+        value: https://recipesharing-amop.onrender.com
       - key: VITE_SOCKET_URL
-        value: https://recipesharing-3.onrender.com
+        value: https://recipesharing-amop.onrender.com
 
 # Declare secret resources (placeholders)
 secrets:
